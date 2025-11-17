@@ -1,0 +1,15 @@
+torch
+aim
+Pillow
+matplotlib
+h5py
+numpy<2
+scipy
+tqdm
+polars
+gdown
+jax
+equinox
+optax
+tyro
+py-spy

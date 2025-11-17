@@ -1,0 +1,7 @@
+.aim/
+*.pyc
+*.png
+*.pkl
+*.hdf5
+*.ptp
+*.gif
