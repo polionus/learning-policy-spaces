@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=rrg-lelis      # Replace with your PI's account
+#SBATCH --account=aip-lelis      # Replace with your PI's account
 #SBATCH --cpus-per-task=2              # Or remove if CPU-only
 #SBATCH --mem=4G
 #SBATCH --time=23:59:59
