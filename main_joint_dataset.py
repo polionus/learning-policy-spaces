@@ -71,13 +71,15 @@ class ProblemGenerator:
                  program_generator: ProgramGenerator,
                  task,
                  num_problem_per_program: int = 1, 
+                 shard_size: int = 1000,
                  ):
 
         self.dsl = dsl
         self.num_prob_per_prog = num_problem_per_program
         self.program_generator = program_generator
-        self.program_list = self._generate_programs(num_progs)
+        # self.program_list = self._generate_programs(num_progs)
         self.seed = seed
+        self.shard_size = shard_size
         
         self.task = task
 
@@ -96,11 +98,12 @@ class ProblemGenerator:
         return reward, world_state
     
 
-    def _generate_programs(self, num_programs: int):
+    def _generate_programs(self):
         
         all_progs = []
 
-        for _ in tqdm(range(num_programs)):
+        ### Calls to the program generator will make new programs each time since we have saved the program generator and it is stateful. 
+        for _ in tqdm(range(self.shard_size)):
             program = self.program_generator.generate_program()
             all_progs.append(program)
 
@@ -124,6 +127,7 @@ class ProblemGenerator:
         '''
             This dataset generator will generate both the programs and their corresponding problems, and you will be able read the programs using dsl.parse_int_to_node to get the actual program that can be evaluated in the environment.
         '''
+        self.program_list = self._generate_programs()
 
         maps = []
         programs = []
@@ -140,15 +144,17 @@ class ProblemGenerator:
         dataset = {'progs': programs, 'maps': maps}
 
         return dataset
-        
-        
 
 def main(save: bool = False, 
          num_progs: int = 100, 
+         shard_size: int = 1000,
          p: float = 0.9, 
          seed: int = 0, 
          num_prob_per_prog: int = 3):
   
+
+
+
     task = EmptyTask(seed)
     dsl = DSL.init_default_karel()
     program_generator = ProgramGenerator(dsl, seed)
@@ -158,23 +164,24 @@ def main(save: bool = False,
                                          program_generator=program_generator,
                                          task = task,
                                          num_problem_per_program=num_prob_per_prog,
+                                         shard_size=shard_size,
                                          )
+    assert num_progs % shard_size == 0, "shard_size must divide num_progs"
 
-    dataset = problem_generator.make_dataset_program_for_problem(p=p)
+    num_iterations = num_progs//shard_size
+    for index in range(num_iterations):
+        dataset = problem_generator.make_dataset_program_for_problem(p=p)
     
-    if save:
-        with open("problem_dataset.pkl", "wb") as f:
-            pickle.dump(dataset, f)
+        if save:
+            with open(f"datasets/1/problem_dataset-shard{index}.pkl", "wb") as f:
+                pickle.dump(dataset, f)
 
     return dataset
 
 if __name__ == "__main__":
     maps = tyro.cli(main)
 
-    ### Let's try to open this:  
-    with open('problem_dataset.pkl', 'rb') as f:
-        dataset = pickle.load(f)
-  
+
     
     
 
