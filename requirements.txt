@@ -13,3 +13,4 @@ equinox
 optax
 tyro
 py-spy
+loguru
