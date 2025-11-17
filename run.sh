@@ -12,4 +12,4 @@ source .venv/bin/activate  # If using virtualenv/conda
 # RUN YOUR SCRIPT HERE
 # =====================
 
-python main_joint_dataset.py --num_progs 100 --seed 0 --save 
+python main_joint_dataset.py --num_progs 50000 --seed 0 --save 
