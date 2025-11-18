@@ -153,8 +153,6 @@ def main(save: bool = False,
          num_prob_per_prog: int = 3):
   
 
-
-
     task = EmptyTask(seed)
     dsl = DSL.init_default_karel()
     program_generator = ProgramGenerator(dsl, seed)
@@ -181,6 +179,7 @@ def main(save: bool = False,
 if __name__ == "__main__":
     maps = tyro.cli(main)
 
+ 
 
     
     
