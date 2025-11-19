@@ -1,9 +1,10 @@
 from typing import Tuple, Callable, NamedTuple
-from config import Config
+from config import TrainConfig
 
 import jax
 import jax.numpy as jnp
 import equinox as eqx
+
 
 from vae.utils import cross_entropy_loss
 
@@ -25,9 +26,6 @@ def get_loss_fn(model_name: str) -> Callable:
         return leaps_loss_fn
     elif model_name == "StrimmedVAE":
         return strimmed_loss_fn
-
-
-
 
 
 ### NOTE: By factoring out the loss function and making it a function of 
@@ -125,9 +123,9 @@ def leaps_loss_fn(params, batch, static) -> Tuple[jax.Array, NamedTuple]:
 
     ###TODO: we just remove the programmatic loss
     total_loss = (
-        Config.trainer_prog_loss_coef * progs_loss
-        + Config.trainer_a_h_loss_coef * a_h_loss
-        + Config.trainer_latent_loss_coef * latent_loss
+        TrainConfig.prog_loss_coeff * progs_loss
+        + TrainConfig.a_h_loss_coeff * a_h_loss
+        + TrainConfig.latent_loss_coeff * latent_loss
     )
 
     return total_loss, Aux(output=output, latent_loss=latent_loss, progs_loss=progs_loss, a_h_loss=a_h_loss)
@@ -206,10 +204,10 @@ def strimmed_loss_fn(params, batch, static) -> Tuple[jax.Array, NamedTuple]:
 
     ###TODO: we just remove the programmatic loss
     total_loss = (
-        Config.trainer_prog_loss_coef * progs_loss
-        + Config.trainer_a_h_loss_coef * a_h_loss
-        + Config.trainer_latent_loss_coef * latent_loss
-    ).squeeze()
+        TrainConfig.prog_loss_coeff * progs_loss
+        + TrainConfig.a_h_loss_coeff * a_h_loss
+        + TrainConfig.latent_loss_coeff * latent_loss
+    )
 
     # jax.debug.breakpoint() 
 
