@@ -1,11 +1,10 @@
 from typing import Annotated
-from dataclasses import dataclass
 ###NOTE: DO NOT change these defaults, somethings will break. 
 
 
-@dataclass
 class TrainConfig:
 
+    model_name: str = "LeapsVAE"
     seed: int = 0
     hidden_size: int = 256
     num_epochs: int = 150
@@ -16,7 +15,7 @@ class TrainConfig:
     learning_rate: float = 5e-4
     episode_length: int = 50
 
-@dataclass
+
 class SearchConfig:
 
     seed: int = 0
@@ -29,7 +28,6 @@ class SearchConfig:
     restart_timeout: int = 5
 
 
-@dataclass
 class DataGenConfig: 
     num_programs: int = 50_000
     ratio_train: float = 0.7
@@ -37,7 +35,9 @@ class DataGenConfig:
     ratio_test: float = 0.15
     
 
+class ArtifactConfig:
 
+    dataset_path: str =  "artifacts/data/programs.pkl"
 
 
 
@@ -89,7 +89,7 @@ class Config:
     )
     data_reduce_dataset: Annotated[
         bool, "Reduce dataset to 1000 samples for debugging"
-    ] = False
+    ] = True
     data_batch_size: Annotated[int, "Batch size used in VAE training."] = 128
     data_max_program_length: Annotated[
         int, "Maximum program length in number of tokens."
