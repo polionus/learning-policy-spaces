@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from dsl import DSL
+from config import ArtifactConfig
 from config import Config
 
 
@@ -52,7 +53,7 @@ def load_programs(dsl: DSL):
         program_id = program_id.strip()
         program = hdf5_file[program_id]["program"][()]
         exec_data = get_exec_data(hdf5_file, program_id, num_agent_actions)
-        if program.shape[0] < Config.data_max_program_length:
+        if program.shape[0] < ArtifactConfig.dataset_path:
             program_list.append((program_id, program, exec_data))
     id_file.close()
     # StdoutLogger.log(
@@ -183,7 +184,7 @@ def make_dataloaders(dsl: DSL, device: torch.device = 'cpu'):
     #     "Data Loader",
     #     f"Loading {Config.data_program_dataset_path} as {Config.data_class_name}.",
     # )
-    with open(Config.data_program_dataset_path, "rb") as f:
+    with open(ArtifactConfig.dataset_path, "rb") as f:
         program_list = pickle.load(f)
 
     if Config.data_reduce_dataset:
@@ -214,7 +215,6 @@ def make_dataloaders(dsl: DSL, device: torch.device = 'cpu'):
         shuffle=True,
         drop_last=True,
         generator=torch_rng,
-        pin_memory=True,
         collate_fn=collate_and_to_numpy,
     )
     val_dataloader = DataLoader(
@@ -223,7 +223,6 @@ def make_dataloaders(dsl: DSL, device: torch.device = 'cpu'):
         shuffle=True,
         drop_last=True,
         generator=torch_rng,
-        pin_memory=False,
         collate_fn=collate_and_to_numpy,
     )
     test_dataloader = DataLoader(
@@ -232,7 +231,6 @@ def make_dataloaders(dsl: DSL, device: torch.device = 'cpu'):
         shuffle=True,
         drop_last=True,
         generator=torch_rng,
-        pin_memory=True,
         collate_fn=collate_and_to_numpy,
     )
 
