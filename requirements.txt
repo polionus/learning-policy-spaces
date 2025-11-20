@@ -14,3 +14,4 @@ optax
 tyro
 py-spy
 loguru
+termcolor
