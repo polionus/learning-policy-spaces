@@ -60,8 +60,6 @@ def submit(cmd,
                                         cpus_per_task,
                                         job_name,
                                         )
-    print(slurm_script)
-    exit()
     with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".slurm") as f:
         f.write(slurm_script)
         slurm_path = f.name
