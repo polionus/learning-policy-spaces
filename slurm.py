@@ -2,15 +2,22 @@ import tempfile
 import subprocess
 from time import sleep
 from termcolor import colored
+import hashlib
+
+
+def get_hash_name(cmd: str, length: int = 7):
+    return f"exp_{hashlib.sha256(cmd.encode()).hexdigest()[:length]}"
 
 def generate_slurm_script(cmd, 
                           gpu_flag: bool, 
                           submit_time: str,
                           memory: str,
                           cpus_per_task: int,
+                          job_name: str,
                           ):
     return f"""#!/bin/bash
 
+#SBATCH --job_name={job_name} 
 #SBATCH --time={submit_time}
 #SBATCH --mem={memory}
 #SBATCH --cpus-per-task={cpus_per_task}
@@ -39,7 +46,9 @@ def submit(cmd,
         gpu_flag: bool, 
         submit_time: str,
         memory: str,
-        cpus_per_task: int):
+        cpus_per_task: int,
+        job_name: str
+        ):
     # job_name = f"exp_{_hash[:6]}"
     # log_dir = "./logs"
     # os.makedirs(log_dir, exist_ok=True)
@@ -48,8 +57,11 @@ def submit(cmd,
                                         gpu_flag, 
                                         submit_time,
                                         memory,
-                                        cpus_per_task)
-
+                                        cpus_per_task,
+                                        job_name,
+                                        )
+    print(slurm_script)
+    exit()
     with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".slurm") as f:
         f.write(slurm_script)
         slurm_path = f.name
@@ -65,12 +77,16 @@ def main():
     submit_time = input(colored('Submit Time: ', 'green'))
     memory = input(colored("Memory: ", 'red'))
     cpus_per_task = input(colored("CPUs Per Task: ", 'blue'))
+
+    job_name = get_hash_name(cmd)
     
     submit(cmd,
             gpu_flag, 
             submit_time,
             memory,
-            cpus_per_task)
+            cpus_per_task,
+            job_name
+            )
     
 if __name__ == "__main__":
     main()
