@@ -15,7 +15,7 @@ def get_hash_name(cmd: str, length: int = 7):
 
 
 def generate_setup_script():
-    return f"""
+    return f"""#!/bin/bash
 rm -rf ${ARCHIVE_NAME}
 rm -rf ${VENV_DIR}
 
@@ -55,13 +55,13 @@ def setup_env(setup_script: str):
     with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".sh") as f:
         f.write(setup_script)
         setup_path = f.name
-    
+
     sleep(0.001)
     activate_cmd = f"chmod +x {setup_path}".split()
-    run_command = f"./{setup_path}"
+    run_command = [setup_path]
 
-    subprocess.run(activate_cmd)
-    subprocess.run(run_command)
+    subprocess.run(activate_cmd, check = True)
+    subprocess.run(run_command, check = True)
 
 
 def generate_slurm_script(cmd, 
