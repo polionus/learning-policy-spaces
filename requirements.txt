@@ -8,7 +8,7 @@ scipy
 tqdm
 polars
 gdown
-jax
+jax[cuda12]
 equinox
 optax
 tyro
