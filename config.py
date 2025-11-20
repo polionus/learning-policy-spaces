@@ -89,8 +89,8 @@ class Config:
     )
     data_reduce_dataset: Annotated[
         bool, "Reduce dataset to 1000 samples for debugging"
-    ] = True
-    data_batch_size: Annotated[int, "Batch size used in VAE training."] = 128
+    ] = False
+    data_batch_size: Annotated[int, "Batch size used in VAE training."] = 256
     data_max_program_length: Annotated[
         int, "Maximum program length in number of tokens."
     ] = 45
@@ -108,7 +108,7 @@ class Config:
     ] = 100
     data_num_demo_per_program: Annotated[
         int, "Number of demonstrations per program in dataset."
-    ] = 1
+    ] = 10
     data_ratio_train: Annotated[float, "Ratio of training data."] = 0.7
     data_ratio_val: Annotated[float, "Ratio of validation data."] = 0.15
     data_ratio_test: Annotated[float, "Ratio of test data."] = 0.15
