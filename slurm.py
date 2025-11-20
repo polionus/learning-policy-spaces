@@ -16,6 +16,8 @@ def get_hash_name(cmd: str, length: int = 7):
 
 def generate_setup_script():
     return f"""#!/bin/bash
+
+echo "Removing Old Archive ..."
 rm -rf {ARCHIVE_NAME}
 rm -rf {VENV_DIR}
 
@@ -27,6 +29,7 @@ uv venv {VENV_DIR}
 
 
 #Activate the env
+echo "Activating the enviornment ..."
 source {VENV_DIR}/bin/activate
 
 
@@ -36,6 +39,7 @@ echo "Installing dependencies..."
 uv pip install -r requirements.txt
 
 # Deactivate
+echo "Deactivating the environment ..." 
 deactivate
 
 
@@ -44,6 +48,7 @@ echo "Compressing the environment ..."
 tar -czf {ARCHIVE_NAME} {VENV_DIR}
 
 # Clean up source directory
+echo "Cleaning up the source directory ..."
 rm -rf {VENV_DIR}
 
 echo "Setup Successful!"
