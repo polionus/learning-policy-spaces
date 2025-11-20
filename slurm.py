@@ -16,18 +16,18 @@ def get_hash_name(cmd: str, length: int = 7):
 
 def generate_setup_script():
     return f"""#!/bin/bash
-rm -rf ${ARCHIVE_NAME}
-rm -rf ${VENV_DIR}
+rm -rf {ARCHIVE_NAME}
+rm -rf {VENV_DIR}
 
 module load python/3.10
 
 # Create the env
 echo "Creating uv enviornment..."
-uv venv ${VENV_DIR}
+uv venv {VENV_DIR}
 
 
 #Activate the env
-source ${VENV_DIR}/bin/activate
+source {VENV_DIR}/bin/activate
 
 
 
@@ -41,10 +41,10 @@ deactivate
 
 # Compress the enviornment
 echo "Compressing the environment ..."
-tar -czf ${ARCHIVE_NAME} ${VENV_DIR}
+tar -czf {ARCHIVE_NAME} {VENV_DIR}
 
 # Clean up source directory
-rm -rf ${VENV_DIR}
+rm -rf {VENV_DIR}
 
 echo "Setup Successful!"
 
@@ -110,6 +110,7 @@ def submit(cmd,
                                         cpus_per_task,
                                         job_name,
                                         )
+    
     with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".slurm") as f:
         f.write(slurm_script)
         slurm_path = f.name
@@ -122,6 +123,8 @@ def main(setup: bool = False):
 
     if setup:
         setup_script = generate_setup_script()
+        print(setup_script)
+        exit()
         setup_env(setup_script)
         return
 
