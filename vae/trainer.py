@@ -7,7 +7,6 @@ import optax
 from typing import Tuple
 from utils.losses import get_loss_fn
 from functools import partial
-import pickle
 from aim import Run
 from logger.logger import logger
 
@@ -69,8 +68,6 @@ class Trainer:
         self.num_epochs = TrainConfig.num_epochs
         
         # os.makedirs(os.path.join(self.output_dir, "model"), exist_ok=True)
-
-    
 
     ### TODO: MAke sure to also get this based on model name.
     def caluculate_run_statistics(self, 
