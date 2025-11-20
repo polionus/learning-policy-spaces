@@ -9,8 +9,8 @@ class TrainConfig:
     hidden_size: int = 256
     num_epochs: int = 150
     teacher_enforcing: bool = True
-    prog_loss_coeff: float = 0.0
-    a_h_loss_coeff: float = 0.1
+    prog_loss_coeff: float = 1.0
+    a_h_loss_coeff: float = 1.0
     latent_loss_coeff: float = 0.1
     learning_rate: float = 5e-4
     episode_length: int = 50
