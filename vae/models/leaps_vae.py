@@ -237,8 +237,6 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 gru_inputs = jnp.concatenate([z_repeated, enc_state, enc_action], axis = -1)
 
                 gru_hidden = self.batched_policy_gru(gru_inputs, gru_hidden) ### This is so slow!!!!!!
-               
-                gru_hidden = jax.random.normal(key = jax.random.key(iter), shape = (1280, 256))
                 ### TODO: Compare this to the concatenation done in the decoder
                 pred_action_logits = self.batched_policy_mlp(gru_hidden) ### this is also slow, but not as slow.
                 # pred_action_logits = jnp.ones((128, self.num_agent_actions)) * jax.random.normal(key = jax.random.key(iter), shape = (128, self.num_agent_actions)) * gru_hidden[:, :6]
