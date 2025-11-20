@@ -131,7 +131,7 @@ class Trainer:
 
     def save_run(self, params: eqx.Module):
         path = f"artifacts/params/{self.save_path}"
-        dir_path = path.split('.')[0]
+        dir_path = self.save_path.split('/')[0]
 
         os.makedirs(dir_path, exist_ok=True)
         eqx.tree_serialise_leaves(path, params)
@@ -145,7 +145,6 @@ class Trainer:
         
         optimizer, opt_state = init_training(self.init_params, lr = TrainConfig.learning_rate)
         params = self.init_params
-        
         
         ###NOTE:  Training loop
         for epoch in range(1, self.num_epochs + 1):
