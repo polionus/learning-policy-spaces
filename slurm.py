@@ -33,7 +33,7 @@ source ${VENV_DIR}/bin/activate
 
 #Install dependencies
 echo "Installing dependencies..."
-uv pip install --no-index -r requirements.txt
+uv pip install -r requirements.txt
 
 # Deactivate
 deactivate
