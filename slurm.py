@@ -1,5 +1,3 @@
-import os
-import json
 import tempfile
 import subprocess
 from time import sleep
@@ -61,7 +59,7 @@ def submit(cmd,
     subprocess.run(['sbatch', slurm_path])
 
 
-def main(cmd,  
+def main(cmd: str,  
         gpu_flag: bool, 
         submit_time: str,
         memory: str,
