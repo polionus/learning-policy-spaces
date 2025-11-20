@@ -3,10 +3,66 @@ import subprocess
 from time import sleep
 from termcolor import colored
 import hashlib
+import tyro
 
+
+
+ARCHIVE_NAME = "learning_policy_spaces_env.tar.gz"
+VENV_DIR = "cached_env"
 
 def get_hash_name(cmd: str, length: int = 7):
     return f"exp_{hashlib.sha256(cmd.encode()).hexdigest()[:length]}"
+
+
+def generate_setup_script():
+    return f"""
+rm -rf ${ARCHIVE_NAME}
+rm -rf ${VENV_DIR}
+
+module load python/3.10
+
+# Create the env
+echo "Creating uv enviornment..."
+uv venv ${VENV_DIR}
+
+
+#Activate the env
+source ${VENV_DIR}/bin/activate
+
+
+
+#Install dependencies
+echo "Installing dependencies..."
+uv pip install --no-index -r requirements.txt
+
+# Deactivate
+deactivate
+
+
+# Compress the enviornment
+echo "Compressing the environment ..."
+tar -czf ${ARCHIVE_NAME} ${VENV_DIR}
+
+# Clean up source directory
+rm -rf ${VENV_DIR}
+
+echo "Setup Successful!"
+
+"""
+
+def setup_env(setup_script: str):
+
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".sh") as f:
+        f.write(setup_script)
+        setup_path = f.name
+    
+    sleep(0.001)
+    activate_cmd = f"chmod +x {setup_path}".split()
+    run_command = f"./{setup_path}"
+
+    subprocess.run(activate_cmd)
+    subprocess.run(run_command)
+
 
 def generate_slurm_script(cmd, 
                           gpu_flag: bool, 
@@ -27,11 +83,8 @@ def generate_slurm_script(cmd,
 #SBATCH --gpus={int(gpu_flag)}
 
 module load python/3.10
-virtualenv --no-download $SLURM_TMPDIR/env
-source $SLURM_TMPDIR/env/bin/activate
-python -m pip install --no-index --upgrade pip
-
-python -m pip install --no-index -r compute-canada-reqs.txt
+echo "Copying cached environment '{ARCHIVE_NAME}' to fast storage ($SLURM_TMPDIR)..."
+cp -f $SLURM_SUBMIT_DIR/{ARCHIVE_NAME} $SLURM_TMPDIR/
 
 #Important magic to make neural networks fast. Will not work with multi-threading
 export FLEXIBLAS=imkl
@@ -49,9 +102,6 @@ def submit(cmd,
         cpus_per_task: int,
         job_name: str
         ):
-    # job_name = f"exp_{_hash[:6]}"
-    # log_dir = "./logs"
-    # os.makedirs(log_dir, exist_ok=True)
 
     slurm_script = generate_slurm_script(cmd,
                                         gpu_flag, 
@@ -68,7 +118,14 @@ def submit(cmd,
     subprocess.run(['sbatch', slurm_path])
 
 
-def main():
+def main(setup: bool = False):
+
+    if setup:
+        setup_script = generate_setup_script()
+        print(setup_script)
+        exit()
+        setup_env(setup_script)
+        return
 
     cmd = input(colored("Please input your command: ", 'red'))
     gpu_flag = input(colored("GPU?: ", 'blue'))
@@ -87,4 +144,4 @@ def main():
             )
     
 if __name__ == "__main__":
-    main()
+    tyro.cli(main)
