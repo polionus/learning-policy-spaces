@@ -45,7 +45,7 @@ deactivate
 
 # Compress the enviornment
 echo "Compressing the environment ..."
-tar -czf {ARCHIVE_NAME} {VENV_DIR}
+tar -cvzf {ARCHIVE_NAME} {VENV_DIR}
 
 # Clean up source directory
 echo "Cleaning up the source directory ..."
