@@ -30,7 +30,10 @@ def generate_slurm_script(cmd,
 #SBATCH --account=aip-lelis
 #SBATCH --gpus={int(gpu_flag)}
 
-module load python/3.10
+module --force purge
+module load StdEnv/2023
+
+module load python/3.12 rust cuda/12.2 swig clang
 uv venv $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 uv pip install -r requirements.txt
