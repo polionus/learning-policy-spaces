@@ -1,7 +1,7 @@
 import tempfile
 import subprocess
 from time import sleep
-import tyro
+from termcolor import colored
 
 def generate_slurm_script(cmd, 
                           gpu_flag: bool, 
@@ -9,9 +9,8 @@ def generate_slurm_script(cmd,
                           memory: str,
                           cpus_per_task: int,
                           ):
-
-    cmd = " ".join(cmd)
     return f"""#!/bin/bash
+
 #SBATCH --time={submit_time}
 #SBATCH --mem={memory}
 #SBATCH --cpus-per-task={cpus_per_task}
@@ -33,7 +32,7 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export PYTHONUNBUFFERED=1 
 
-python {cmd}
+{cmd}
 """
 
 def submit(cmd, 
@@ -59,11 +58,13 @@ def submit(cmd,
     subprocess.run(['sbatch', slurm_path])
 
 
-def main(cmd: str,  
-        gpu_flag: bool, 
-        submit_time: str,
-        memory: str,
-        cpus_per_task: int):
+def main():
+
+    cmd = input(colored("Please input your command: ", 'red'))
+    gpu_flag = input(colored("GPU?: ", 'blue'))
+    submit_time = input(colored('Submit Time: ', 'green'))
+    memory = input(colored("Memory: ", 'red'))
+    cpus_per_task = input(colored("CPUs Per Task: ", 'blue'))
     
     submit(cmd,
             gpu_flag, 
@@ -72,4 +73,4 @@ def main(cmd: str,
             cpus_per_task)
     
 if __name__ == "__main__":
-    tyro.cli(main)
+    main()
