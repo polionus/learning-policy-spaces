@@ -123,8 +123,6 @@ def main(setup: bool = False):
 
     if setup:
         setup_script = generate_setup_script()
-        print(setup_script)
-        exit()
         setup_env(setup_script)
         return
 
