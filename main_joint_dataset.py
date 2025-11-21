@@ -175,7 +175,7 @@ def main(save: bool = False,
     
         if save:
             timestamp = get_time_stamp()
-            os.makedirs(f"{PATH_TO_DATASETS}/{timestamp}")
+            os.makedirs(f"{PATH_TO_DATASETS}/{timestamp}", exist_ok=True)
             with open(f"{PATH_TO_DATASETS}/{timestamp}/problem_dataset-shard{index}.pkl", "wb") as f:
                 pickle.dump(dataset, f)
 
