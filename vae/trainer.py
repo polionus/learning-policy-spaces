@@ -1,4 +1,3 @@
-import os
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -9,7 +8,7 @@ from utils.losses import get_loss_fn
 from functools import partial
 from aim import Run
 from logger.logger import logger
-import datetime
+from utils.time import get_time_stamp
 
 from torch.utils.data import DataLoader
 from config import TrainConfig
@@ -132,9 +131,7 @@ class Trainer:
 
     def save_run(self, params: eqx.Module):
 
-        now = datetime.datetime.now()
-        time_stamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-        path = f"artifacts/params/{time_stamp}.pkl"
+        path = f"artifacts/params/{get_time_stamp()}.pkl"
         eqx.tree_serialise_leaves(path, params)
 
         logger.info(f"Model saved to {path}")
