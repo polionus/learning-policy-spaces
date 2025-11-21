@@ -54,7 +54,7 @@ def main(
         latent_loss_coeff: float = TrainConfig.latent_loss_coeff,
         learning_rate: float = TrainConfig.learning_rate,
         episode_length: int = TrainConfig.episode_length,
-        save_path: str | None = None,
+        save: bool = True,
         ):
     
     hyper_params = update_config(num_epochs, 
@@ -77,7 +77,7 @@ def main(
     p_train_dataloader, p_val_dataloader, _ = make_dataloaders(dsl)
     logger.info("Data Loader.")
 
-    trainer = Trainer(model, run, save_path)
+    trainer = Trainer(model, run, save)
     logger.info("Started Training...")
     trainer.train(p_train_dataloader, p_val_dataloader)
     

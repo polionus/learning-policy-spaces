@@ -9,6 +9,7 @@ from utils.losses import get_loss_fn
 from functools import partial
 from aim import Run
 from logger.logger import logger
+import datetime
 
 from torch.utils.data import DataLoader
 from config import TrainConfig
@@ -52,13 +53,13 @@ class Trainer:
     def __init__(self, 
                  model: BaseVAE, 
                  run: Run,
-                 save_path: str | None
+                 save: bool
                  ):
 
         ###TODO: Find a cleaner way of doing this: this seems to be biting us in the ass.
         self.init_params, self.static = eqx.partition(model, eqx.is_inexact_array)
         self.run = run
-        self.save_path = save_path
+        self.save = save
         ##Check if necessary?
         # self.output_dir = os.path.join("index", Config.experiment_name)
  
@@ -130,10 +131,10 @@ class Trainer:
         return params, EpochReturn(*epoch_info_list.tolist())
 
     def save_run(self, params: eqx.Module):
-        path = f"artifacts/params/{self.save_path}"
-        dir_path = self.save_path.split('/')[0]
 
-        os.makedirs(dir_path, exist_ok=True)
+        now = datetime.datetime.now()
+        time_stamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+        path = f"artifacts/params/{time_stamp}.pkl"
         eqx.tree_serialise_leaves(path, params)
 
         logger.info(f"Model saved to {path}")
@@ -151,5 +152,5 @@ class Trainer:
             logger.info(f"Epoch:{epoch}")
             params, train_info = self._run_epoch(params, train_dataloader, epoch, opt_state, optimizer, True)
         
-        if self.save_path:
+        if self.save:
             self.save_run(params)
