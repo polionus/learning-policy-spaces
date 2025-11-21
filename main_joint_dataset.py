@@ -149,7 +149,7 @@ class ProblemGenerator:
         return dataset
 
 def main(save: bool = False, 
-         num_progs: int = 100, 
+         num_progs: int = 1000, 
          shard_size: int = 1000,
          p: float = 0.9, 
          seed: int = 0, 
