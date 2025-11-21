@@ -5,7 +5,10 @@ from tqdm import tqdm
 from dsl.functional_wrapper import FunctionalEnv
 import tyro 
 import pickle
+from utils.time import get_time_stamp
+from utils.path_consts import PATH_TO_DATASETS
 from karel.world import WorldState, run_and_trace
+import os
 
 ### TODO: 1. Finish Debugging the base.py file. 2. Write down the dataset script and run it. 3. Write down ideas on how to implement it. 
 
@@ -171,7 +174,9 @@ def main(save: bool = False,
         dataset = problem_generator.make_dataset_program_for_problem(p=p)
     
         if save:
-            with open(f"datasets/1/problem_dataset-shard{index}.pkl", "wb") as f:
+            timestamp = get_time_stamp()
+            os.makedirs(f"{PATH_TO_DATASETS}/{timestamp}")
+            with open(f"{PATH_TO_DATASETS}/{timestamp}/problem_dataset-shard{index}.pkl", "wb") as f:
                 pickle.dump(dataset, f)
 
     return dataset
