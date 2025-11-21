@@ -21,7 +21,8 @@ def generate_slurm_script(cmd,
                           ):
     return f"""#!/bin/bash
 
-#SBATCH --job-name={job_name} 
+#SBATCH --job-name={job_name}
+#SBATCH --output=logs/{job_name}.out 
 #SBATCH --time={submit_time}
 #SBATCH --mem={memory}
 #SBATCH --cpus-per-task={cpus_per_task}
