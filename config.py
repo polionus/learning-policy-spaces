@@ -2,13 +2,16 @@ from typing import Annotated
 ###NOTE: DO NOT change these defaults, somethings will break. 
 
 
+PATH_TO_DATASETS = 'artifacts/datasets'
+
 class TrainConfig:
 
     model_name: str = "LeapsVAE"
     seed: int = 0
     hidden_size: int = 256
     num_epochs: int = 150
-    teacher_enforcing: bool = True
+    prog_teacher_enforcing: bool = True
+    a_h_teacher_enforcing: bool = True
     prog_loss_coeff: float = 1.0
     a_h_loss_coeff: float = 1.0
     latent_loss_coeff: float = 0.1
@@ -20,7 +23,7 @@ class SearchConfig:
 
     seed: int = 0
     sigma_decay_rate: float = 0.9
-    min_sigma: float =  0.1
+    sigma_min: float =  0.1
     elitism_rate: float = 0.1
     population_size: int = 256
     num_env_executions: int = 16
@@ -29,6 +32,7 @@ class SearchConfig:
 
 
 class DataGenConfig: 
+    
     num_programs: int = 50_000
     ratio_train: float = 0.7
     ratio_val: float = 0.15 
@@ -89,7 +93,7 @@ class Config:
     )
     data_reduce_dataset: Annotated[
         bool, "Reduce dataset to 1000 samples for debugging"
-    ] = False
+    ] = True
     data_batch_size: Annotated[int, "Batch size used in VAE training."] = 256
     data_max_program_length: Annotated[
         int, "Maximum program length in number of tokens."

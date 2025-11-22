@@ -6,7 +6,7 @@ from dsl.functional_wrapper import FunctionalEnv
 import tyro 
 import pickle
 from utils.time import get_time_stamp
-from utils.path_consts import PATH_TO_DATASETS
+from config import PATH_TO_DATASETS
 from karel.world import WorldState, run_and_trace
 import os
 
