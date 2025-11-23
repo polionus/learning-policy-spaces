@@ -1,0 +1,46 @@
+[project]
+name = "learning-policy-spaces"  # Replace with your actual project name
+version = "0.1.0"
+description = "JAX/PyTorch ML project"  # Add your description
+requires-python = ">=3.9"  # JAX requires 3.9+
+
+# Core dependencies - things needed for basic functionality
+dependencies = [
+    "numpy<2",              # Pinned to v1.x as you specified
+    "Pillow",               # Image processing
+    "h5py",                 # HDF5 file handling
+    "scipy",                # Scientific computing
+    "tqdm",                 # Progress bars
+    "polars",               # Fast dataframe library
+    "tyro",                 # CLI argument parsing
+    "loguru",               # Logging
+    "termcolor",
+    "optax", 
+    "torch",
+    "matplotlib",           # Colored terminal output
+    "aim",
+]
+
+[project.optional-dependencies]
+# PyTorch environment (for local or PyTorch-focused work)
+
+# JAX environment (for cluster with CUDA 12)
+jax-cuda = [
+    "jax[cuda12]",
+    "equinox",     # Neural network library for JAX
+    "optax",       # Optimization library for JAX
+]
+
+# JAX environment (for CPU-only or different CUDA version)
+jax-cpu = [
+    "jax[cpu]",
+    "equinox",
+    "optax",
+]
+
+# Development and profiling tools
+dev = [
+    "py-spy",      # Performance profiling
+    "pytest",      # Testing (recommended addition)
+    "black",       # Code formatting (recommended addition)
+]
