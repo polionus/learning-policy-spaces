@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Callable
 ###NOTE: DO NOT change these defaults, somethings will break. 
 
 
@@ -22,6 +22,8 @@ class TrainConfig:
 class SearchConfig:
 
     seed: int = 0
+    multiprocessing: bool = True
+    initial_sigma: float = 1.0
     sigma_decay_rate: float = 0.9
     sigma_min: float =  0.1
     elitism_rate: float = 0.1
@@ -29,6 +31,11 @@ class SearchConfig:
     num_env_executions: int = 16
     num_iterations: int = 1000
     restart_timeout: int = 5
+    search_method_name: str = 'CEM'
+    cem_reduce_to_mean: bool = False
+    n_elite = int(elitism_rate * population_size)
+    search_method: Callable
+
 
 
 class DataGenConfig: 
