@@ -8,9 +8,6 @@ import equinox as eqx
 
 from vae.utils import cross_entropy_loss
 
-
-
-
 class Aux(NamedTuple):
     output: jax.Array
     latent_loss: jax.Array
