@@ -158,7 +158,7 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 pred_tokens = jnp.argmax(self.softmax(pred_token_logits), axis = -1)
             
                 if progs_teacher_enforcing:
-                    current_tokens = jnp.reshape(progs[:, iter], batch_size)
+                    current_tokens = jnp.reshape(progs[:, iter], batch_size).astype(jnp.int32)
                 else:
                     current_tokens = jnp.reshape(pred_tokens, batch_size)
 
@@ -250,11 +250,14 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 ### Something is wrong with the shape without teacher enforcing.
                 ## BUG: There is a bug when teacher enforcing is on
                 if a_h_teacher_enforcing:
+
+                    ##This does not chagne the type of the input
                     current_state = jnp.reshape(s_h[:, :, iter, :, :, :], (batch_size * demos_per_program, c, h, w))
-                    current_action = jnp.reshape(a_h[:, :, iter], (batch_size * demos_per_program, 1))
+                    current_action = jnp.reshape(a_h[:, :, iter], (batch_size * demos_per_program, 1)).astype(jnp.int32)
 
                 else:
                     ### TODO: make sure the unbatched dimensions would give the right output?
+                    ### This does.
                     current_state, world = self.batched_env_step(world, current_state, current_action) ### The difference this makes is minimal.
                     
             
@@ -284,7 +287,7 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
             ### The methods have been constructed at initialization time, and hence do not need the flags passed in 
             # ### for each call.
-            decoder_result = self.decode(z, prog, prog_mask) ### This makes it slower, but not as slow. 
+            decoder_result = self.decode(z, prog) ### This makes it slower, but not as slow. 
             pred_progs, pred_progs_logits, pred_progs_masks = decoder_result
 
             # ### The methods have been constructed at initialization time, and hence do not need the flags passed in 
@@ -335,7 +338,7 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
     return LeapsVAE
 
 LeapsVAE = make_leaps_vae(TrainConfig.prog_teacher_enforcing, TrainConfig.a_h_teacher_enforcing)
-
+# LeapsVAE = make_leaps_vae(False, False)
 
 
 
