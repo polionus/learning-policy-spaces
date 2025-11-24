@@ -4,7 +4,6 @@ from logger.logger import logger
 from vae.models import load_model
 from utils.models import load_model_from_template
 from search.latent_search import LatentSearch
-from search.encoder_only_search import LatentSearch as NeuralLatentSearch
 from tasks import get_task_cls
 from aim import Run
 import jax
@@ -16,7 +15,7 @@ if __name__ == '__main__':
     
     keygen = make_key_gen(jax.random.key(SearchConfig.seed))
 
-    model_template = load_model(TrainConfig.model_name, dsl) #This loads the PyTree
+    model_template = load_model(SearchConfig.model_name, dsl) #This loads the PyTree
     model = load_model_from_template(ArtifactConfig.model_params_path, model_template)
 
     task_cls = get_task_cls(Config.env_task)

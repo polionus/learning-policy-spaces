@@ -325,9 +325,9 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
             # I separated this block to able to jit it.
             # The reason we cannot return the padded sequences is that the interpreter doesn't accept the pad token?
-            pred_progs, _, pred_progs_masks = self.decode(z, None, force_disable_teacher_enforcing=True)
+            pred_progs, _, pred_progs_masks = self.decode(z, None)
             pred_progs_masks = pred_progs_masks.astype(jnp.bool)
-            
+
             pred_progs_tokens = []
             for prog, prog_mask in zip(pred_progs, pred_progs_masks):
 
@@ -338,7 +338,7 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
     return LeapsVAE
 
 LeapsVAE = make_leaps_vae(TrainConfig.prog_teacher_enforcing, TrainConfig.a_h_teacher_enforcing)
-# LeapsVAE = make_leaps_vae(False, False)
+LeapsVAESearch = make_leaps_vae(False, False)
 
 
 

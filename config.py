@@ -21,6 +21,7 @@ class TrainConfig:
 
 class SearchConfig:
 
+    model_name = "LeapsVAESearch"
     seed: int = 0
     multiprocessing: bool = True
     initial_sigma: float = 1.0
@@ -48,7 +49,7 @@ class DataGenConfig:
 class ArtifactConfig:
 
     dataset_path: str =  "artifacts/data/programs.pkl"
-    model_params_path: str = "artifacts/params/2025-11-21_02-44-11.pkl"
+    model_params_path: str = "artifacts/params/2025-11-24_09-18-20.pkl"
     
 
 

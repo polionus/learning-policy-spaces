@@ -1,6 +1,6 @@
 from typing import Union
 from .base_vae import BaseVAE
-from .leaps_vae import LeapsVAE
+from .leaps_vae import LeapsVAE, LeapsVAESearch
 from .strimmed_vae import StrimmedVAE
 
 
