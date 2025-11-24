@@ -33,8 +33,10 @@ def generate_slurm_script(cmd,
 
 module --force purge
 module load StdEnv/2023
-
 module load python/3.12 rust cuda/12.2 swig clang
+
+export UV_PROJECT_ENVIRONMENT=$SLURM_TMPDIR/env
+
 uv venv $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 uv sync --extra jax-cuda
@@ -46,7 +48,7 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export PYTHONUNBUFFERED=1 
 
-echo "Running command {cmd}" ...
+
 {cmd}
 """
 
