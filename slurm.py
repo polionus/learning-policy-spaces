@@ -37,7 +37,7 @@ module load StdEnv/2023
 module load python/3.12 rust cuda/12.2 swig clang
 uv venv $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
-uv pip install -r requirements.txt
+uv sync
 
 
 #Important magic to make neural networks fast. Will not work with multi-threading
