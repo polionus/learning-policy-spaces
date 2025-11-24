@@ -19,6 +19,7 @@ dependencies = [
     "torch",
     "matplotlib",           # Colored terminal output
     "aim",
+    "equinox",     # Neural network library for JAX
 ]
 
 [project.optional-dependencies]
@@ -27,15 +28,12 @@ dependencies = [
 # JAX environment (for cluster with CUDA 12)
 jax-cuda = [
     "jax[cuda12]",
-    "equinox",     # Neural network library for JAX
-    "optax",       # Optimization library for JAX
+        # Optimization library for JAX
 ]
 
 # JAX environment (for CPU-only or different CUDA version)
 jax-cpu = [
     "jax[cpu]",
-    "equinox",
-    "optax",
 ]
 
 # Development and profiling tools
