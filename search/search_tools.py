@@ -1,13 +1,13 @@
 import jax.numpy as jnp
 from logger.logger import logger
 from dsl import DSL
-from config import SearchConfig
+from config import SearchConfig, TrainConfig
 from dataclasses import dataclass
 from functools import partial
 from typing import List, Callable
 from utils.program import execute_program 
 from multiprocessing import Pool
-import equinox as eqx
+from vae.models.base_vae import BaseVAE
 import jax
 
 
@@ -21,6 +21,7 @@ class SearchState:
     best_program: str
     prev_mean_elite_reward: float
     sigma: float
+    num_evaluations: int = 0
 
 def get_search_method(method: str) -> Callable:
     if method == "CEM":
@@ -33,15 +34,17 @@ def get_search_method(method: str) -> Callable:
     else: 
         raise ValueError(f"Expected `CEM` or `CEBS` as search methods, but got {method}")
 
-def init_search_state() -> SearchState: 
+def init_search_state(key: jax.Array) -> SearchState: 
 
-    search_state = SearchState(population = init_population(),
+    search_state = SearchState(population = init_population(TrainConfig.hidden_size, SearchConfig.population_size, key = key),
                                 converged = False,
                                 num_evaluations = 0,
                                 counter_for_restart = 0,
                                 best_reward = -float("inf"),
                                 best_program = None,
-                                prev_mean_elite_reward = -float("inf"))
+                                prev_mean_elite_reward = -float("inf"),
+                                sigma = SearchConfig.initial_sigma,
+                                )
 
     return search_state 
 
@@ -60,7 +63,7 @@ def init_population(latent_size: int, population_size: int, key: jax.Array) -> j
 ### The logic is basically the same, in our version we are simply going to make sure 
 
 def execute_population(
-        model: eqx.Module, population: jax.Array, dsl: DSL, task_envs: List
+        model: BaseVAE, population: jax.Array, dsl: DSL, task_envs: List
     ) -> tuple[list[str], jax.Array, int]:
         """Runs the given population in the environment and returns a list of mean rewards, after
         `Config.search_number_executions` executions.
@@ -73,16 +76,17 @@ def execute_population(
             as tensor and number of evaluations as int.
         """
         programs_tokens = model.decode_vector(population)
-
         ## At this step, the programs are turned into string (from tokens), and in order to be executed, they need to be turned into nodes. 
         programs_str = [
             dsl.parse_int_to_str(prog_tokens) for prog_tokens in programs_tokens
         ]
         
+        
         #TODO: Learn to use/modify this to better use the multi-processing in the code.
         ### Use vmap here?
 
-        if SearchConfig.multiprocessing:
+        ## BUG: This doesn't work in multi-processing
+        if SearchConfig.multiprocessing and False:
             with Pool() as pool:
                 fn = partial(execute_program, task_envs=task_envs, dsl=dsl)
                 results = pool.map(fn, programs_str)
@@ -125,7 +129,11 @@ def process_population_results(results, dsl: DSL, best_reward: float, num_evalua
     return jnp.array(rewards), best_reward, num_evaluations, best_program, converged
 
 
-def maybe_continue_population(mean_elite_reward: float, search_state: SearchState, elite_population: jax.Array, key: jax.Array):
+def maybe_continue_population(mean_elite_reward: float, 
+                              search_state: SearchState, 
+                              elite_population: jax.Array, 
+                              search_method: Callable,
+                              key: jax.Array):
 
     #Update counter
     search_state.counter_for_restart += mean_elite_reward == search_state.prev_mean_elite_reward
@@ -135,7 +143,7 @@ def maybe_continue_population(mean_elite_reward: float, search_state: SearchStat
                 search_state.sigma = SearchConfig.initial_sigma
                 # StdoutLogger.log("Latent Search", "Restarted population.")
     else:             
-        elite_choice_indices, elite_population = SearchConfig.search_method(elite_population, key)    
+        elite_choice_indices, elite_population = search_method(elite_population, key)    
         search_state.population = get_neighbors(elite_choice_indices, elite_population)
 
         # Anneal Sigma only when actually continuing search?
