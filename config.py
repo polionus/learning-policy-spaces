@@ -101,7 +101,7 @@ class Config:
     )
     data_reduce_dataset: Annotated[
         bool, "Reduce dataset to 1000 samples for debugging"
-    ] = True
+    ] = False
     data_batch_size: Annotated[int, "Batch size used in VAE training."] = 256
     data_max_program_length: Annotated[
         int, "Maximum program length in number of tokens."
