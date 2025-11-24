@@ -1,30 +1,15 @@
-import os 
-import sys
-
-
-# Add the parent directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-### fix this to make it work with tyro:
-
-import torch
-from config import Config
-from src.config.runtime import Runtime
-from logger.stdout_logger import StdoutLogger
+from config import TrainConfig, Config, ArtifactConfig, SearchConfig
+from dsl import DSL
+from logger.logger import logger
+from vae.models import load_model
+from utils.models import load_model_from_template
 from search.latent_search import LatentSearch
 from search.encoder_only_search import LatentSearch as NeuralLatentSearch
 from tasks import get_task_cls
+from aim import Run
+import jax
+from utils.rng import make_key_gen
 
-###TODO: find a way to make this more modular:
-def get_latent_search():
-    if "Leaps" in Config.model_name:
-        return LatentSearch
-    else:
-        return NeuralLatentSearch
-
-if __name__ == "__main__":
-
-    model, device, dsl = Runtime.get_policy_model(), Runtime.device, Runtime.dsl
 
     task_cls = get_task_cls(Config.env_task)
     params = torch.load(Config.model_params_path(), map_location=Runtime.device)
