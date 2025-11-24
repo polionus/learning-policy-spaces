@@ -175,9 +175,9 @@ def set_to_close_stack(checker_state: CheckerState, x: jax.Array):
 
 
 def push_closeparen_to_stack(checker_state: CheckerState, close_paren: int):
-
-    return replace(checker_state, to_close_stack_pos = checker_state.to_close_stack_pos + 1, 
-                   to_close_stack = checker_state.to_close_stack.at[checker_state.to_close_stack_pos].set(close_paren))
+    new_pos = checker_state.to_close_stack_pos + 1
+    return replace(checker_state, to_close_stack_pos = new_pos, 
+                   to_close_stack = checker_state.to_close_stack.at[new_pos].set(close_paren))
 
 
 
@@ -227,9 +227,10 @@ def close_cond_paren(checker_state:CheckerState):
 
 
 def push_needelse_stack(checker_state: CheckerState, need_else: bool):
+    new_pos = checker_state.i_need_else_stack_pos + 1
 
-    return replace(checker_state,i_need_else_stack = checker_state.i_need_else_stack.at[checker_state.i_need_else_stack_pos].set(need_else), 
-                   i_need_else_stack_pos = checker_state.i_need_else_stack_pos + 1)
+    return replace(checker_state,i_need_else_stack = checker_state.i_need_else_stack.at[new_pos].set(need_else), 
+                   i_need_else_stack_pos = new_pos)
 
 
 def pop_needelse_stack(checker_state: CheckerState) -> Tuple[bool, CheckerState]:
