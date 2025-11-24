@@ -1,1 +1,0 @@
-rsync -avz ultimis@vulcan.alliancecan.ca:/home/ultimis/scratch/learning-policy-spaces/artifacts/params/ ./artifacts/params
