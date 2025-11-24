@@ -3,6 +3,8 @@ import subprocess
 from time import sleep
 from termcolor import colored
 import hashlib
+from utils.args import get_all_commands
+from utils.time import get_time_stamp
 
 
 
@@ -10,7 +12,9 @@ ARCHIVE_NAME = "$SLURM_TMPDIR/learning_policy_spaces_env.tar.gz"
 VENV_DIR = "$SLURM_TMPDIR/cached_env"
 
 def get_hash_name(cmd: str, length: int = 7):
-    return f"exp_{hashlib.sha256(cmd.encode()).hexdigest()[:length]}"
+    stamp = get_time_stamp()
+    name = f"{cmd}-{stamp}"
+    return f"exp_{hashlib.sha256(name.encode()).hexdigest()[:length]}"
 
 def generate_slurm_script(cmd, 
                           gpu_flag: bool, 
@@ -78,21 +82,25 @@ def submit(cmd,
 
 def main():
 
-    cmd = input(colored("Please input your command: ", 'red'))
+    raw_cmd = input(colored("Please input your command: ", 'red'))
     gpu_flag = input(colored("GPU?: ", 'blue'))
     submit_time = input(colored('Submit Time: ', 'green'))
     memory = input(colored("Memory: ", 'red'))
     cpus_per_task = input(colored("CPUs Per Task: ", 'blue'))
+    
 
-    job_name = get_hash_name(cmd)
+    commands = get_all_commands(raw_cmd)
     
-    submit(cmd,
-            gpu_flag, 
-            submit_time,
-            memory,
-            cpus_per_task,
-            job_name
-            )
-    
+    for cmd in commands:
+        job_name = get_hash_name(cmd)
+        
+        submit(cmd,
+                gpu_flag, 
+                submit_time,
+                memory,
+                cpus_per_task,
+                job_name
+                )
+        sleep(0.01) #Don't overwhelm the scheduler   
 if __name__ == "__main__":
     main()
