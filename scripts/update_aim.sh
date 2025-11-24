@@ -1,1 +1,3 @@
-rsync -avz ultimis@vulcan.alliancecan.ca:/home/ultimis/scratch/learning-policy-spaces/.aim ./.aim
+rm -rf .aim
+aim init
+rsync -avz ultimis@vulcan.alliancecan.ca:/home/ultimis/scratch/learning-policy-spaces/.aim/ ./.aim
