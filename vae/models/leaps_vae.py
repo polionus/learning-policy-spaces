@@ -316,27 +316,20 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
             return z
         
-        @jax.jit
-        def _decode_vector_to_token_mask(self, z: jax.Array) -> Tuple[jax.Array, jax.Array]:
-            pred_progs, _, pred_progs_masks = self.decode(z)
-            # Add the DEF (0) token to all programs.
-            zeros = jnp.zeros((pred_progs.shape[0], 1))
-            pred_progs = jnp.concatenate([zeros, pred_progs], axis = 1)
-        
-            return pred_progs, pred_progs_masks
-            
 
-
-        def decode_vector_to_tokens(self, z:jax.Array) -> jax.Array:
+        def decode_vector(self, z:jax.Array) -> jax.Array:
             '''It receives a population of latent programs and then outputs the decoded programs'''
 
             # I separated this block to able to jit it.
             # The reason we cannot return the padded sequences is that the interpreter doesn't accept the pad token?
-            pred_progs, pred_progs_masks = self._decode_vector_to_token_mask(z)
+            pred_progs, _, pred_progs_masks = self.decode(z, None, force_disable_teacher_enforcing=True)
+            pred_progs_masks = pred_progs_masks.astype(jnp.bool)
             
             pred_progs_tokens = []
             for prog, prog_mask in zip(pred_progs, pred_progs_masks):
-                pred_progs_tokens.append([0] + prog[prog_mask].tolist())
+
+                # Add the DEF (0) token to all programs.
+                pred_progs_tokens.append([0] + (prog[prog_mask]).tolist())
 
             return pred_progs_tokens
     return LeapsVAE
