@@ -11,7 +11,8 @@ def cross_entropy_loss(logits: jax.Array, targets: jax.Array, mask: jax.Array) -
 
     loss = optax.softmax_cross_entropy_with_integer_labels(logits, targets.astype(jnp.int32))
     loss = loss * mask
-    return loss.mean()
+
+    return loss.sum()/(mask.sum() + 1e-8)
 
 
 
