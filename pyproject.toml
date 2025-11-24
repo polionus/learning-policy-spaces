@@ -15,11 +15,10 @@ dependencies = [
     "tyro",                 # CLI argument parsing
     "loguru",               # Logging
     "termcolor",
-    "optax", 
     "torch",
     "matplotlib",           # Colored terminal output
     "aim",
-    "equinox",     # Neural network library for JAX
+         # Neural network library for JAX
 ]
 
 [project.optional-dependencies]
@@ -28,12 +27,16 @@ dependencies = [
 # JAX environment (for cluster with CUDA 12)
 jax-cuda = [
     "jax[cuda12]",
+    "equinox",
+    "optax"
         # Optimization library for JAX
 ]
 
 # JAX environment (for CPU-only or different CUDA version)
 jax-cpu = [
     "jax[cpu]",
+    "equinox",
+    "optax"
 ]
 
 # Development and profiling tools
