@@ -10,6 +10,7 @@ from aim import Run
 import jax
 from utils.rng import make_key_gen
 
+    keygen = make_key_gen(jax.random.key(SearchConfig.seed))
 
     task_cls = get_task_cls(Config.env_task)
     run = Run()
