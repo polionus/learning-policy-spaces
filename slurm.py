@@ -46,6 +46,7 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export PYTHONUNBUFFERED=1 
 
+echo "Running command {cmd}" ...
 {cmd}
 """
 
