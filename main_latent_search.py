@@ -11,6 +11,8 @@ import jax
 from utils.rng import make_key_gen
 
     keygen = make_key_gen(jax.random.key(SearchConfig.seed))
+    model_template = load_model(TrainConfig.model_name, dsl) #This loads the PyTree
+    model = load_model_from_template(ArtifactConfig.model_params_path, model_template)
 
     task_cls = get_task_cls(Config.env_task)
     run = Run()
