@@ -34,7 +34,6 @@ class SearchConfig:
     search_method_name: str = 'CEM'
     cem_reduce_to_mean: bool = False
     n_elite = int(elitism_rate * population_size)
-    search_method: Callable
 
 
 
@@ -49,6 +48,8 @@ class DataGenConfig:
 class ArtifactConfig:
 
     dataset_path: str =  "artifacts/data/programs.pkl"
+    model_params_path: str = "artifacts/params/2025-11-21_02-44-11.pkl"
+    
 
 
 
