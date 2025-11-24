@@ -15,11 +15,11 @@ from vae.trainer import Trainer
 from config import TrainConfig
 import tyro 
 
-### update config:
 
 def update_config(num_epochs: int, 
             hidden_size: int,
-            teacher_enforcing: bool,
+            prog_teacher_enforcing: bool,
+            a_h_teacher_enforcing: bool, 
             prog_loss_coeff: float,
             a_h_loss_coeff: float,
             latent_loss_coeff: float,
@@ -29,7 +29,8 @@ def update_config(num_epochs: int,
     
     TrainConfig.num_epochs = num_epochs
     TrainConfig.hidden_size = hidden_size
-    TrainConfig.teacher_enforcing = teacher_enforcing
+    TrainConfig.prog_teacher_enforcing = prog_teacher_enforcing
+    TrainConfig.a_h_teacher_enforcing = a_h_teacher_enforcing
     TrainConfig.prog_loss_coeff = prog_loss_coeff
     TrainConfig.a_h_loss_coeff = a_h_loss_coeff
     TrainConfig.latent_loss_coeff = latent_loss_coeff
@@ -48,7 +49,8 @@ def update_config(num_epochs: int,
 def main(
         num_epochs: int = TrainConfig.num_epochs, 
         hidden_size: int = TrainConfig.hidden_size,
-        teacher_enforcing: bool = TrainConfig.teacher_enforcing,
+        a_h_teacher_enforcing: bool = TrainConfig.a_h_teacher_enforcing,
+        prog_teacher_enforcing: bool = TrainConfig.prog_teacher_enforcing,
         prog_loss_coeff: float = TrainConfig.prog_loss_coeff,
         a_h_loss_coeff: float = TrainConfig.a_h_loss_coeff,
         latent_loss_coeff: float = TrainConfig.latent_loss_coeff,
@@ -59,7 +61,8 @@ def main(
     
     hyper_params = update_config(num_epochs, 
         hidden_size,
-        teacher_enforcing,
+        a_h_teacher_enforcing,
+        prog_teacher_enforcing,
         prog_loss_coeff,
         a_h_loss_coeff,
         latent_loss_coeff,
