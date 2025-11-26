@@ -229,8 +229,9 @@ def make_act_next(checker_state: CheckerState):
 
 
 def close_cond_paren(checker_state:CheckerState):
-    _state = jax.lax.cond(checker_state.c_deep == 0, lambda: STATE_POSTCOND_OPEN_PAREN, lambda: STATE_MANDATORY_NEXT)
-    return replace(checker_state, state = _state, c_deep = checker_state.c_deep - 1)
+    new_c_deep = checker_state.c_deep - 1
+    _state = jax.lax.cond(new_c_deep == 0, lambda: STATE_POSTCOND_OPEN_PAREN, lambda: STATE_MANDATORY_NEXT)
+    return replace(checker_state, state = _state, c_deep = new_c_deep)
 
 
 
@@ -352,14 +353,12 @@ class PySyntaxChecker:
 
         if self.only_structure:
             self.effect_acts = []
-            self.range_cste = jnp.array()
-            self.bool_checks = jnp.array()
+            self.range_cste = []
+            self.bool_checks = []
         else:
-            self.effect_acts = jnp.array([T2I[act_tkn] for act_tkn in acts])
-            self.range_cste = jnp.array(
-                [idx for tkn, idx in T2I.items() if tkn.startswith("R=")]
-            )
-            self.bool_checks = jnp.array([T2I[bcheck] for bcheck in bool_check])
+            self.effect_acts = [T2I[act_tkn] for act_tkn in acts]
+            self.range_cste = [idx for tkn, idx in T2I.items() if tkn.startswith("R=")]
+            self.bool_checks = [T2I[bcheck] for bcheck in bool_check]
         
         ###TODO: make this part jax compatible
         ##ATTENTION: inclusion check
@@ -368,6 +367,8 @@ class PySyntaxChecker:
             self.effect_acts.append(T2I["<HOLE>"])
 
         self.effect_acts = jnp.array(self.effect_acts)
+        self.range_cste = jnp.array(self.range_cste)
+        self.bool_checks = jnp.array(self.bool_checks)
 
         ## Union operation between sets, only used in assert statement
         #self.act_acceptable = self.effect_acts | self.flow_lead | self.close_parens
@@ -418,27 +419,10 @@ class PySyntaxChecker:
         for tkn in self.postcond_open_paren:
             mask = jnp.ones((1,1,self.vocab_size), dtype = jnp.bool)
             mask = mask.at[0, 0, tkn].set(False)
-            self.postcond_open_paren_masks.at[int(tkn)].set(mask)
+            self.postcond_open_paren_masks = self.postcond_open_paren_masks.at[int(tkn)].set(mask)
 
     def need_else(self, tkn_idx: int) -> bool:
-    # self.need_else = {T2I["IF"]: False, T2I["IFELSE"]: True} ### This is a PyTree!
-        conds = jnp.array([
-            tkn_idx == self.if_idx,
-            tkn_idx == self.ifelse_idx
-        ])
-
-        case = jnp.select(conds, jnp.arange(len(conds)))
-
-        def _on_if(): return False
-        def _on_ifelse(): return True
-        
-        branches = (
-            _on_if,
-            _on_ifelse,
-        )
-
-
-        return jax.lax.switch(case, branches)
+        return jnp.equal(tkn_idx, self.ifelse_idx)
 
 
     def forward(self, state: CheckerState, new_idx: int):
