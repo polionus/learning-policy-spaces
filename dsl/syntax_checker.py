@@ -668,11 +668,15 @@ class PySyntaxChecker:
 
     ### TODO: This is the for loop used to check the feasiblity of the tokens, and I should use jax constructs to implemenet it. 
     ### Update: the input sequence has been written in such a way that the sequence mask is only passed once.
-    #@eqx.filter_jit
-    def get_sequence_mask(self, checker_state: CheckerState, inp_sequence: list) -> Tuple[CheckerState, jax.Array]:
-        inp_sequence = jnp.array(inp_sequence)
-        checker_state = self.forward(checker_state, inp_sequence[0])
-        return checker_state, jnp.squeeze(self.allowed_tokens(checker_state))
+    def get_sequence_mask(self, state: CheckerState, inp_sequence: jax.Array) -> Tuple[CheckerState, jax.Array]:
+
+        def get_token_mask(checker_state: CheckerState, inp_token: int) -> Tuple[CheckerState, jax.Array]:
+
+            checker_state = self.forward(checker_state, inp_token)
+            return checker_state, jnp.squeeze(self.allowed_tokens(checker_state))
+        
+        final_state, mask =  jax.lax.scan(get_token_mask, state, inp_sequence)
+        return final_state, mask
 
     def get_initial_checker_state(self):
         return CheckerState(STATE_MANDATORY_NEXT, self.vocab.def_tkn, -1, -1, 0, -1, InitStack.i_need_else_stack, InitStack.to_close_stack)
