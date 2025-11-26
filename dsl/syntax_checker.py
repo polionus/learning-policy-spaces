@@ -165,6 +165,14 @@ class CheckerState(eqx.Module):
         self.i_need_else_stack =  i_need_else_stack
         self.to_close_stack = to_close_stack
 
+    def __repr__(self):
+        return f"""state: {self.state}
+        next_mandatory: {self.next_mandatory}
+        i_need_else_stack_pos: {self.i_need_else_stack_pos}
+        to_close_stack_pos: {self.to_close_stack_pos}
+        c_deep: {self.c_deep}
+        i_need_else_stack: {self.i_need_else_stack}
+        to_close_stack:{self.to_close_stack}"""
     
 def set_i_need_else_stack(checker_state:CheckerState, x: jax.Array):
     return replace(checker_state, i_need_else_stack = x)
