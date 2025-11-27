@@ -97,36 +97,36 @@ def execute_population(
         return results
 
 
-def process_population_results(results, dsl: DSL, best_reward: float, num_evaluations: int):
+def process_population_results(results, dsl: DSL, search_state: SearchState):
     rewards = []
-    converged = False
+    # converged = False
     for p, num_eval, r in results:
         program_str = dsl.parse_node_to_str(p)
         rewards.append(r)
-        num_evaluations += num_eval
+        search_state.num_evaluations += num_eval
 
         #Since the best reward is kept from previous runs, the best program is not changed between populations, unless a program that has even better return is found.
-        if r > best_reward:
-            best_reward = r
+        if r > search_state.best_reward:
+            search_state.best_reward = r
             best_program = program_str
             logger.info(
-                    "Latent Search", f"New best reward: {best_reward}"
+                    "Latent Search", f"New best reward: {search_state.best_reward}"
             )
             logger.info(
                 "Latent Search", f"New best program: {best_program}"
             )
             logger.info(
-                "Latent Search", f"Number of evaluations: {num_evaluations}"
+                "Latent Search", f"Number of evaluations: {search_state.num_evaluations}"
             )
 
             ## For now I am not collecting the data. We will get to that with aim later.
             #collector.collect({'time':t, 'num_evaluations':num_evaluations, 'best_reward':best_reward})
             
-        if best_reward >= 1.0:
-            converged = True
+        if search_state.best_reward >= 1.0:
+            search_state.converged = True
             break
 
-    return jnp.array(rewards), best_reward, num_evaluations, best_program, converged
+    return jnp.array(rewards), search_state
 
 
 def maybe_continue_population(mean_elite_reward: float, 
