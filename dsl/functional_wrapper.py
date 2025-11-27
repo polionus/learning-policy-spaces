@@ -101,39 +101,16 @@ class FunctionalEnv:
     def front_is_clear(self):
         
         self._state, flag = jax.jit(front_is_clear)(self._state)
-
-        # if MAKE_ENV:
-        #     x, y, d = self._state.hero_pos
-
-        #     ###Set a wall beside the agent with probability P
-        #     if jax.random.uniform(self._get_new_key()) > P:
-        #         self._state.s[x + 1, y, d] = True
-        
         return flag
 
     def left_is_clear(self):
         
         self._state, flag = jax.jit(left_is_clear)(self._state)
 
-        # if MAKE_ENV:
-        #     x, y, d = self._state.hero_pos
-
-        #     ###Set a wall beside the agent with probability P
-        #     if jax.random.uniform(self._get_new_key()) > P:
-        #         self._state = replace(self._state, s = self._state.s.at[x - 1, y, 4].set(True))
         return flag
     
     def right_is_clear(self):
-        self._state, flag = jax.jit(right_is_clear)(self._state)
-        
-
-        # if MAKE_ENV:
-        #     x, y, d = self._state.hero_pos
-
-        #     ###Set a wall beside the agent with probability P
-        #     if jax.random.uniform(self._get_new_key()) > P:
-        #         self._state = replace(self._state, s = self._state.s.at[x + 1, y, d].set(True))
-                
+        self._state, flag = jax.jit(right_is_clear)(self._state)     
 
         return flag
     
