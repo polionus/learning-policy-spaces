@@ -325,7 +325,7 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
             # I separated this block to able to jit it.
             # The reason we cannot return the padded sequences is that the interpreter doesn't accept the pad token?
-            pred_progs, _, pred_progs_masks = self.decode(z, None)
+            pred_progs, _, pred_progs_masks = eqx.filter_jit(self.decode)(z, None)
             pred_progs_masks = pred_progs_masks.astype(jnp.bool)
 
             pred_progs_tokens = []
