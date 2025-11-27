@@ -165,7 +165,7 @@ def CEM_MEAN(elite_population: jax.Array, key: jax.Array):
     elite_choice_indices = jnp.zeros(SearchConfig.population_size, dtype = jnp.int16) #This just works!
     mean_elite = jnp.mean(elite_population, axis=0)       
     #Replace elite population with its mean
-    elite_population = elite_population = jnp.tile(mean_elite, (SearchConfig.n_elite, 1))
+    elite_population = jnp.tile(mean_elite, (SearchConfig.n_elite, 1))
     return elite_choice_indices, elite_population
 
 def CEM(elite_population: jax.Array, key: jax.Array):
