@@ -181,7 +181,7 @@ class BaseVAE(eqx.Module):
                 sequence_mask,                                # boolean mask
                 -jnp.finfo(jnp.float32).max * jnp.ones_like(sequence_mask, dtype=jnp.float32),
                 jnp.zeros_like(sequence_mask, dtype=jnp.float32),
-                )
+                ).squeeze()
 
         return syntax_mask, grammar_state    
 
