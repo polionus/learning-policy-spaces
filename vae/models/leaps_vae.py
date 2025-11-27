@@ -131,9 +131,8 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 self.syntax_checker.get_initial_checker_state() for _ in range(batch_size)
             ]
 
-            ### Stack bathc dimension in PyTree Grammar states
+            ### Stack batch dimension in PyTree Grammar states
             grammar_state = jax.tree_util.tree_map(lambda *xs: jnp.stack(xs, 0), *grammar_state)
-        
             init_state = current_tokens, gru_hidden_state, grammar_state
 
             def decode_step(state, iter):
