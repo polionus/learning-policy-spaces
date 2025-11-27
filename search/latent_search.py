@@ -2,7 +2,7 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 from . import search_tools as st
-from utils.program import execute_program
+from utils.policy import execute_program
 from dsl import DSL
 from logger.logger import logger
 
@@ -44,7 +44,6 @@ class LatentSearch:
         
         for iteration in range(1, SearchConfig.num_iterations + 1):
 
-            
             results = st.execute_population(self.model, search_state.population, self.dsl, self.task_envs)
             rewards, search_state =  st.process_population_results(results, self.dsl, search_state)
             

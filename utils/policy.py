@@ -2,6 +2,7 @@ from dsl.base import Program
 from dsl import DSL
 from tasks.task import Task
 from config import SearchConfig
+import jax
 
 from dsl.functional_wrapper import FunctionalEnv
 def evaluate_program(task, program):
@@ -36,3 +37,12 @@ def execute_program(
     mean_reward /= len(task_envs)
     
     return program, num_evaluations, mean_reward    
+
+
+
+def evaluate_neural_policy(task, z: jax.Array):
+    pass
+
+
+def execute_neural_policy(z: jax.Array, task_envs: list[Task], dsl:DSL) -> tuple[Program, int, float]:
+    pass

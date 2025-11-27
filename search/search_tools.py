@@ -6,7 +6,7 @@ from config import SearchConfig, TrainConfig
 from dataclasses import dataclass
 from functools import partial
 from typing import List, Callable
-from utils.program import execute_program
+from utils.policy import execute_program
 from utils.rng import make_key_gen 
 from multiprocessing import Pool
 from vae.models.base_vae import BaseVAE
@@ -37,6 +37,13 @@ def get_search_method(method: str) -> Callable:
         return CEBS
     else: 
         raise ValueError(f"Expected `CEM` or `CEBS` as search methods, but got {method}")
+    
+
+def get_execute_member(model_name: str):
+    if model_name == "LeapsVAE":
+        return execute_program
+    elif model_name == "NeuralPolicyVAE":
+        return 
 
 def init_search_state(key: jax.Array) -> SearchState: 
 
