@@ -143,13 +143,16 @@ def maybe_continue_population(mean_elite_reward: float,
                 search_state.sigma = SearchConfig.initial_sigma
                 # StdoutLogger.log("Latent Search", "Restarted population.")
     else:             
-        elite_choice_indices, elite_population = search_method(elite_population, key)    
-        search_state.population = get_neighbors(elite_choice_indices, elite_population)
+        elite_choice_indices, elite_population = search_method(elite_population, next(keygen))    
+        search_state.population = get_neighbors(search_state.sigma, 
+                                                elite_choice_indices, 
+                                                elite_population,
+                                                next(keygen))
 
         # Anneal Sigma only when actually continuing search?
         # Should I not actually reset sigma?
         # I should actually resent the sgima
-        search_state.sigma = search_sigma_anneal(SearchState.sigma, SearchConfig.sigma_min, SearchConfig.sigma_decay_rate)
+        search_state.sigma = search_sigma_anneal(search_state.sigma, SearchConfig.sigma_min, SearchConfig.sigma_decay_rate)
              
     return search_state
 
