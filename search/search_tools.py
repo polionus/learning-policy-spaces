@@ -1,15 +1,19 @@
 import jax.numpy as jnp
+import numpy as np
 from logger.logger import logger
 from dsl import DSL
 from config import SearchConfig, TrainConfig
 from dataclasses import dataclass
 from functools import partial
 from typing import List, Callable
-from utils.program import execute_program 
+from utils.program import execute_program
+from utils.rng import make_key_gen 
 from multiprocessing import Pool
 from vae.models.base_vae import BaseVAE
 import jax
 
+OFFSET = 10
+keygen = make_key_gen(jax.random.key(SearchConfig.seed + OFFSET))
 
 @dataclass
 class SearchState:
