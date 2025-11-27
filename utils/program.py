@@ -1,10 +1,11 @@
 from dsl.base import Program
 from dsl import DSL
 from tasks.task import Task
+from config import SearchConfig
 
 from dsl.functional_wrapper import FunctionalEnv
-def evaluate_program(self, task, program):
-    world_state = FunctionalEnv(task.reset_state(), seed = self.seed)
+def evaluate_program(task, program):
+    world_state = FunctionalEnv(task.reset_state(), seed = SearchConfig.seed)
     reward = 0.0
     
     for _ in program.run_generator(world_state):
@@ -29,7 +30,8 @@ def execute_program(
     # Evaluate single program
     mean_reward = 0.0
     for task_env in task_envs:
-        mean_reward += evaluate_program(program)
+        reward, _ = evaluate_program(task_env, program)
+        mean_reward += reward
     num_evaluations = 1
     mean_reward /= len(task_envs)
     
