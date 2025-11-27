@@ -124,7 +124,6 @@ def is_clear(world_state: WorldState, r: int, c: int) -> bool:
         lambda _: jnp.logical_not(world_state.s[r, c, 4])
     )
 
-    # jax.debug.breakpoint()
     
     return jax.lax.switch(case, branches, operand=None)
     
@@ -340,7 +339,7 @@ def run_action(world_state: WorldState, action: int) -> WorldState:
 
     def _on_default(world_state: WorldState) -> WorldState: return world_state
 
-    # jax.debug.breakpoint()
+
     branches = (
         move, 
         turn_left,
@@ -352,7 +351,7 @@ def run_action(world_state: WorldState, action: int) -> WorldState:
 
     case = jnp.asarray(action, jnp.int32).squeeze()
 
-    # jax.debug.breakpoint()
+
 
     return jax.lax.switch(case, branches, world_state) 
 

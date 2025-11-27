@@ -137,7 +137,7 @@ def make_strimmed_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool
             mask_valid_actions = jnp.array((self.num_agent_actions - 1) * [-jnp.finfo(dtype = jnp.float32).max] + [0.0])
 
             init_state = current_state, current_action, gru_hidden, terminated_policy, world
-            # jax.debug.breakpoint()
+       
             
             ### batch the world: world
 
@@ -184,7 +184,7 @@ def make_strimmed_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool
                     
             
                 terminated_policy = jnp.logical_or(current_action == self.num_agent_actions - 1, terminated_policy)
-                # jax.debug.breakpoint()
+          
 
                 new_state = (current_state, current_action, gru_hidden, terminated_policy, world)
                 y = (current_action,pred_action_logits)
