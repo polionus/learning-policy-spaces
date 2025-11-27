@@ -65,6 +65,12 @@ all_tokens = [
     "WHILE",
 ]
 
+def load_dataset(path: str):
+
+    with open(path, "rb") as f:
+        dataset = pickle.load(f)
+
+    return dataset
 
 class ProblemGenerator:
 
@@ -183,6 +189,8 @@ def main(save: bool = False,
 
 if __name__ == "__main__":
     maps = tyro.cli(main)
+    #dataset = load_dataset('./artifacts/datasets/1/problem_dataset-shard0.pkl')
+    
 
  
 
