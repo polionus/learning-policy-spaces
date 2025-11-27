@@ -375,13 +375,6 @@ class PySyntaxChecker:
         self.flow_needs_bool = jnp.array([T2I[flow_tkn] for flow_tkn in flow_need_bool])
         self.postcond_open_paren = jnp.array([T2I[op] for op in postcond_open_paren])
 
-        # tt = torch.cuda if "cuda" in self.device.type else torch
-        
-
-        ### This can also be changed to an array, since the keys are simply integers, which can be used as indices of the array.
-        ### the best way to predetermine the size of the array is search go through the values of t2i and get the maximum. This will be the maximum index.
-        
-
         ##BUG: The T2I will give a token that is outside the range len(possible)mandatories
         ### Why isn't it failing?
         
@@ -422,7 +415,7 @@ class PySyntaxChecker:
         
         ### Make Post Cond masks
         # self.postcond_open_paren_masks = {}
-        self.postcond_open_paren_masks = jnp.full(shape = (len(self.postcond_open_paren), 1, 1, self.vocab_size), fill_value=True, dtype=jnp.bool_)
+        self.postcond_open_paren_masks = jnp.full(shape = (self.vocab_size, 1, 1, self.vocab_size), fill_value=True, dtype=jnp.bool_)
         for tkn in self.postcond_open_paren:
             mask = jnp.ones((1,1,self.vocab_size), dtype = jnp.bool)
             mask = mask.at[0, 0, tkn].set(False)
