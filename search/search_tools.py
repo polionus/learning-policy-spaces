@@ -75,7 +75,7 @@ def execute_population(
             tuple[list[str], int, torch.Tensor]: List of programs as strings, list of mean rewards
             as tensor and number of evaluations as int.
         """
-        programs_tokens = model.decode_vector(population)
+        programs_tokens = np.array(model.decode_vector(population))
         ## At this step, the programs are turned into string (from tokens), and in order to be executed, they need to be turned into nodes. 
         programs_str = [
             dsl.parse_int_to_str(prog_tokens) for prog_tokens in programs_tokens
