@@ -9,6 +9,7 @@ class TrainConfig:
     model_name: str = "LeapsVAE"
     seed: int = 0
     hidden_size: int = 256
+    batch_size: int = 256
     num_epochs: int = 150
     prog_teacher_enforcing: bool = True
     a_h_teacher_enforcing: bool = True
@@ -49,10 +50,8 @@ class DataGenConfig:
 class ArtifactConfig:
 
     dataset_path: str =  "artifacts/data/programs.pkl"
-    model_params_path: str = "artifacts/params/2025-11-24_09-18-20.pkl"
+    model_params_path: str = "artifacts/params/2025-11-25_00-36-47.pkl"
     
-
-
 
 class Config:
     """Class that handles the project global configuration."""
