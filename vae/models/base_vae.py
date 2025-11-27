@@ -175,8 +175,8 @@ class BaseVAE(eqx.Module):
     def get_syntax_mask(
         self, current_token: jax.Array, grammar_state: CheckerState
     ):
-        
-        grammar_state, sequence_mask = self.syntax_checker.get_sequence_mask(grammar_state, [current_token])
+        current_token = jnp.expand_dims(current_token, axis = 0)
+        grammar_state, sequence_mask = self.syntax_checker.get_sequence_mask(grammar_state, current_token)
         syntax_mask = jnp.where(
                 sequence_mask,                                # boolean mask
                 -jnp.finfo(jnp.float32).max * jnp.ones_like(sequence_mask, dtype=jnp.float32),

@@ -661,12 +661,15 @@ class PySyntaxChecker:
     ### Update: the input sequence has been written in such a way that the sequence mask is only passed once.
     def get_sequence_mask(self, state: CheckerState, inp_sequence: jax.Array) -> Tuple[CheckerState, jax.Array]:
 
-        def get_token_mask(checker_state: CheckerState, inp_token: int) -> Tuple[CheckerState, jax.Array]:
+        '''Unified function that gets input sequences and outputs the sequence mask and the updates grammar state. 0D inputs require jnp.expand_dims to work correctly  '''
 
+        def get_token_mask(checker_state: CheckerState, inp_token: int) -> Tuple[CheckerState, jax.Array]:
+        
             checker_state = self.forward(checker_state, inp_token)
             return checker_state, jnp.squeeze(self.allowed_tokens(checker_state))
-        
-        final_state, mask =  jax.lax.scan(get_token_mask, state, inp_sequence)
+
+        # # NOTE: Should unroll be true or false?
+        final_state, mask =  jax.lax.scan(get_token_mask, state, inp_sequence, unroll=False)
         return final_state, mask
 
     def get_initial_checker_state(self):
