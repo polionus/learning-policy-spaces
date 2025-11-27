@@ -381,15 +381,22 @@ class PySyntaxChecker:
         ### This can also be changed to an array, since the keys are simply integers, which can be used as indices of the array.
         ### the best way to predetermine the size of the array is search go through the values of t2i and get the maximum. This will be the maximum index.
         
-        self.mandatories_mask = jnp.full(shape = (len(possible_mandatories), 1, 1, self.vocab_size), fill_value=True, dtype = jnp.bool_)
+
+        ##BUG: The T2I will give a token that is outside the range len(possible)mandatories
+        ### Why isn't it failing?
+        
+        self.mandatories_mask = jnp.full(shape = (self.vocab_size, 1, 1, self.vocab_size), fill_value=True, dtype = jnp.bool_)
         for mand_tkn in possible_mandatories:
             mask = jnp.ones((1,1,self.vocab_size), dtype=jnp.bool) ### This is all trues, except when 
             mask = mask.at[0, 0, T2I[mand_tkn]].set(False)
+        
             self.mandatories_mask = self.mandatories_mask.at[T2I[mand_tkn]].set(mask)
+        #print(self.mandatories_mask)
+      
      
         ## TODO: I have to rename the masks and their locations.
                 # self.act_next_masks = {}
-        self.act_next_masks = jnp.full(shape=(len(self.close_parens), 1, 1, self.vocab_size), fill_value=True, dtype = jnp.bool_)
+        self.act_next_masks = jnp.full(shape=(self.vocab_size, 1, 1, self.vocab_size), fill_value=True, dtype = jnp.bool_)
         for close_tkn in self.close_parens:
             # mask = tt.BoolTensor(1, 1, self.vocab_size).fill_(1)
             mask = jnp.ones((1,1,self.vocab_size), dtype=jnp.bool)
