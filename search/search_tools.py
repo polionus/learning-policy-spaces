@@ -142,7 +142,7 @@ def maybe_continue_population(mean_elite_reward: float,
     #Update counter
     search_state.counter_for_restart += mean_elite_reward == search_state.prev_mean_elite_reward
     if search_state.counter_for_restart >= SearchConfig.restart_timeout and SearchConfig.restart_timeout > 0:
-                search_state.population = init_population()
+                search_state.population = init_population(TrainConfig.hidden_size, SearchConfig.population_size, key = next(keygen))
                 search_state.counter_for_restart = 0
                 search_state.sigma = SearchConfig.initial_sigma
                 # StdoutLogger.log("Latent Search", "Restarted population.")
