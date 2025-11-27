@@ -28,7 +28,6 @@ class LatentSearch:
 
         ### Understand and correct this
         self.task_envs = [task_cls(i) for i in range(SearchConfig.num_env_executions)]
-        # jax.debug.breakpoint()
 
 
     def search(self,  key: jax.Array) -> tuple[str, bool, int]:
@@ -39,23 +38,24 @@ class LatentSearch:
             tuple[str, bool]: Best program in string format and a boolean value indicating
             if the search has converged.
         """
-
+        
         ### initialize search
         search_state = st.init_search_state(key)
+        
         for iteration in range(1, SearchConfig.num_iterations + 1):
-            results = st.execute_population(self.model, search_state.population, self.dsl, self.task_envs)
-            raise NotImplementedError('The rest of this function still needs to be developed.')
-            rewards = [reward for _,_,reward in results]
 
+            
+            results = st.execute_population(self.model, search_state.population, self.dsl, self.task_envs)
+            rewards, search_state =  st.process_population_results(results, self.dsl, search_state)
+            
             if search_state.converged:
                 break
             
             _, topk_indices = jax.lax.top_k(rewards, SearchConfig.n_elite)
             elite_population = search_state.population[topk_indices]
             mean_elite_reward = jnp.mean(rewards[topk_indices])
-
+            
             logger.info(
-                "Latent Search",
                 f"Iteration {iteration} mean elite reward: {mean_elite_reward}",
             )
             
@@ -65,7 +65,8 @@ class LatentSearch:
                                                         self.search_method,
                                                         key)
             search_state.prev_mean_elite_reward = mean_elite_reward
-            
+        
+          
 
         if not search_state.converged:
             ## TODO: Gotta track the best reward here.
