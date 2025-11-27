@@ -54,7 +54,7 @@ def init_search_state(key: jax.Array) -> SearchState:
 
 def get_neighbors(sigma: float, elite_choice_indices:jax.Array, elite_population: jax.Array, key: jax.Array):
     mu = elite_population[elite_choice_indices]
-    population = jax.random.normal(key, shape= mu.shape) + sigma
+    population = mu + jax.random.normal(key, shape= (SearchConfig.n_elite, mu.shape[0])) + sigma
     return population
 
 def search_sigma_anneal(sigma: float, sigma_min: float, sigma_rate: float):
