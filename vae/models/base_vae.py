@@ -2,6 +2,7 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 from functools import partial
+from utils.losses import Batch
 
 import equinox as eqx
 
@@ -16,16 +17,11 @@ from utils.rng import make_key_gen
 from typing import Callable, Generator
 from ..utils import init_conv2d, init_linear
 
-###NOTE: make sure to use eqx.filter_vmap in places you are explicitly calling the layers, not when you are defining them, since you might need 
-## to vmap in versatile ways, and defining vmap in the beginning will constrain you.
-
-
 ### TODO: can you make sure that the vae doesn't have to have the program length?
 STATE_SHAPE = (len(STATE_TABLE), Config.env_height(), Config.env_width())
 
 
-### Alright, we are going to do a pass where we change everything into jax.lax.switch, jax.lax.scan, jax.lax.cond things.
-
+      # scalar, shared
 
 
 #### TODO: Maybe these named tuples need to be jax arrays.
@@ -53,6 +49,7 @@ class BaseVAE(eqx.Module):
     state_encoder: eqx.Module
     action_encoder: eqx.Module
     token_encoder: eqx.Module
+    vectorized_token_encoder: eqx.Module
 
     encoder_mu: eqx.Module
     encoder_log_sigma: eqx.Module
@@ -110,7 +107,9 @@ class BaseVAE(eqx.Module):
         )
 
         self.action_encoder = eqx.nn.Embedding(self.num_agent_actions, self.num_agent_actions, key=next(self.keygen)) 
+        #Extra vmap over tokens (which are normally not vmapped.)
         self.token_encoder = eqx.nn.Embedding(num_embeddings=self.num_program_tokens, embedding_size=self.num_program_tokens, key = next(self.keygen))
+        self.vectorized_token_encoder = eqx.filter_vmap(self.token_encoder)
 
         self.encoder_mu = eqx.nn.Linear(self.hidden_size, self.hidden_size, key = next(self.keygen))
         self.encoder_log_sigma = eqx.nn.Linear(self.hidden_size, self.hidden_size, key = next(self.keygen))
@@ -124,41 +123,20 @@ class BaseVAE(eqx.Module):
         #self._world = WorldBatch(states)
         ## I have successfully created the vmapped version of the worlds.
         ## I need to see how to use them.    
-        return eqx.filter_vmap(make_world_state)(states)
+        return make_world_state(states)
         
+    def env_step(self, world: WorldState, actions: jax.Array):
 
-
-
-    def env_step(self, world: WorldState, states: jax.Array, actions: jax.Array):
-
-        ## If the task is not used to determine the next step in the environment, why is it being passed here?
-
-        ## If I change the function to output the world state, this would be better. 
-        # states = jnp.moveaxis(states, [-1, -2, -3], [-2, -3, -1])
-
-        ### TODO: This is a stupid check.
-
-        ### Sot he only place we are using this is in this function. We should change the
-        ### api to make the thing work in a functional way?
-        ## But the world batch object you wrote (and the one in prog_policies code base)
-        ### both only output states, and don't take in tasks!
-
-        ### The step function is taking the world, which already has the states.
-        ### Do I even need the states? Yes, since I input them into the network.
-        
-        # jax.debug.breakpoint()
         new_states, world = step(world, actions)
         new_states = jnp.transpose(new_states, (2, 0, 1)).astype(jnp.float32)
-        #new_states = jnp.moveaxis(new_states, [-1, -2, -3], [-2, -3, -1])
-        # jax.debug.breakpoint()
-
+        
         return new_states, world
     
 
     def sample_latent_vector(self, enc_hidden_state: jax.Array) -> jax.Array:
         
-        mu = eqx.filter_vmap(self.encoder_mu)(enc_hidden_state)
-        log_sigma = eqx.filter_vmap(self.encoder_log_sigma)(enc_hidden_state)
+        mu = self.encoder_mu(enc_hidden_state)
+        log_sigma = self.encoder_log_sigma(enc_hidden_state)
         sigma = jnp.exp(log_sigma)
         std_z = jax.random.normal(next(self.keygen), sigma.shape)
 
@@ -188,11 +166,7 @@ class BaseVAE(eqx.Module):
 
     def __call__(
         self,
-        s_h: jax.Array,
-        a_h: jax.Array,
-        a_h_mask: jax.Array,
-        prog: jax.Array,
-        prog_mask: jax.Array,   
+        batch: Batch,   
     ):
         raise NotImplementedError
 

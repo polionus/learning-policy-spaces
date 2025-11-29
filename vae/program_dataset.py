@@ -2,10 +2,12 @@ import pickle
 import h5py
 import os
 import numpy as np
+import jax.numpy as jnp
 import torch
 from torch.utils.data import Dataset, DataLoader
 from dsl import DSL
 from config import ArtifactConfig
+from utils.losses import Batch
 from config import Config
 
 
@@ -13,13 +15,22 @@ def collate_and_to_numpy(batch):
     # Typical batch is a list of (x, y) tensors; adjust to your structure
   
     s_h, a_h, a_h_mask, prog, prog_mask = zip(*batch)
+    
     s_h = torch.stack(s_h, dim=0).detach().cpu().numpy()   # (B, ...) np.float32/np.int32
     a_h = torch.stack(a_h, dim=0).detach().cpu().numpy()
     a_h_mask = torch.stack(a_h_mask, dim=0).detach().cpu().numpy()   # (B, ...) np.float32/np.int32
     prog = torch.stack(prog, dim=0).detach().cpu().numpy()
-    prog_mask = torch.stack(prog_mask, dim=0).detach().cpu().numpy()   # (B, ...) np.float32/np.int32
+    prog_mask = torch.stack(prog_mask, dim=0).detach().cpu().numpy()    # (B, ...) np.float32/np.int32
 
-    return s_h, a_h, a_h_mask, prog, prog_mask
+
+    batch = Batch(
+        s_h=jnp.array(s_h),
+        a_h=jnp.array(a_h),
+        a_h_masks=jnp.array(a_h_mask),
+        progs=jnp.array(prog),
+        progs_masks=jnp.array(prog_mask)
+    )
+    return batch
 
 
 def get_exec_data(hdf5_file, program_id, num_agent_actions):

@@ -4,7 +4,7 @@ import numpy as np
 import equinox as eqx
 import optax
 from typing import Tuple
-from utils.losses import get_loss_fn
+from utils.losses import get_loss_fn, Batch
 from functools import partial
 from aim import Run
 from logger.logger import logger
@@ -17,12 +17,34 @@ from typing import NamedTuple
 from .models.base_vae import BaseVAE
 
 
+inner_axes = Batch(
+    s_h=0, 
+    a_h=0, 
+    a_h_masks=0, 
+    progs=None,      # <--- Broadcast: Use the same prog for all 10 steps
+    progs_masks=None # <--- Broadcast
+)
+
+# OUTER AXES: Handling the '256' dimension
+# We map axis 0 of everything. This peels off the '256' layer, 
+# passing a [10, ...] chunk to the inner function.
+outer_axes = Batch(
+    s_h=0, 
+    a_h=0, 
+    a_h_masks=0, 
+    progs=0,         # <--- Vectorize: Pick the specific prog for this batch item
+    progs_masks=0    # <--- Vectorize
+)
+
 @eqx.filter_jit
+@eqx.filter_vmap(in_axes=((None, None, None, None, outer_axes)))
+@eqx.filter_vmap(in_axes=(None, None, None, None, inner_axes))
 def train_step(params, 
                opt_state, 
                optimizer: optax.GradientTransformation, 
                loss_fn:callable, 
                batch: jax.Array) -> Tuple[eqx.Module, Tuple, jax.Array, NamedTuple]:
+        
 
         (loss, aux), grads = eqx.filter_value_and_grad(loss_fn, has_aux=True)(params, batch)
         updates, opt_state = optimizer.update(grads, opt_state, params = params)
@@ -106,6 +128,7 @@ class Trainer:
         
         # The model takes in these parameters, and outputs: Teacher enforcing is enabled by default, and so was also enabled for us.
         params, opt_state, total_loss, aux =  train_step(params, opt_state, optimizer, self.loss_fn, batch)
+        logger.info(f'Batch done, loss: {total_loss}')
         
         self.run.track(float(total_loss), name = "Loss")
         self.run.track(float(aux.latent_loss), name = "Latent loss")
@@ -121,8 +144,6 @@ class Trainer:
         batch_info_list = jnp.zeros((len(dataloader), 8))
 
         for batch_idx, batch in enumerate(dataloader):
-            
-            batch = tuple(jax.device_put(item.astype(np.float32, copy = False)) for item in batch)
             params, batch_info = self._run_batch(params, batch, opt_state, optimizer, training)
 
         epoch_info_list = jnp.mean(batch_info_list, axis=0)
@@ -145,6 +166,7 @@ class Trainer:
         params = self.init_params
         
         ###NOTE:  Training loop
+        
         for epoch in range(1, self.num_epochs + 1):
             logger.info(f"Epoch:{epoch}")
             params, train_info = self._run_epoch(params, train_dataloader, epoch, opt_state, optimizer, True)
