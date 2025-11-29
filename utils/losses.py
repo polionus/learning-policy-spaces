@@ -21,6 +21,24 @@ class Aux(NamedTuple):
     progs_loss: jax.Array
     a_h_loss: jax.Array
 
+inner_axes = Batch(
+    s_h=0, 
+    a_h=0, 
+    a_h_masks=0, 
+    progs=None,      # <--- Broadcast: Use the same prog for all 10 steps
+    progs_masks=None # <--- Broadcast
+)
+
+# OUTER AXES: Handling the '256' dimension
+# We map axis 0 of everything. This peels off the '256' layer, 
+# passing a [10, ...] chunk to the inner function.
+outer_axes = Batch(
+    s_h=0, 
+    a_h=0, 
+    a_h_masks=0, 
+    progs=0,         # <--- Vectorize: Pick the specific prog for this batch item
+    progs_masks=0    # <--- Vectorize
+)
 
 def get_loss_fn(model_name: str) -> Callable:
 
@@ -36,11 +54,15 @@ def get_loss_fn(model_name: str) -> Callable:
 ### to avoid code duplication.
 
 
-def leaps_loss_fn(params, batch:Batch, static) -> Tuple[jax.Array, NamedTuple]:
+
+
+def leaps_loss_fn(params, batch: Batch, static) -> Tuple[jax.Array, NamedTuple]:
     # s_h, a_h, a_h_masks, progs, progs_masks = batch
     # The model takes in these parameters, and outputs: Teacher enforcing is enabled by default, and so was also enabled for us.
     model = eqx.combine(params, static)
-    output = model(batch)
+    # jax.debug.breakpoint()
+    vmapped_model = eqx.filter_vmap(eqx.filter_vmap(model, in_axes=(inner_axes,)), in_axes=(outer_axes,))
+    output = vmapped_model(batch)
     # These.
 
     (   mu,
