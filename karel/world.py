@@ -85,14 +85,6 @@ class WorldState(eqx.Module):
     terminated: bool
 
 
-    # def __init__(self, s: jax.Array = None):
-    #     if s is not None:
-    #         self.s = s.astype(bool)
-    #     x, y, d = jnp.where(self.s[:, :, :4] > 0)
-    #     self.hero_pos = jnp.array([x[0], y[0], d[0]])
-    #     self.markers_grid = self.s[:, :, 5:].argmax(axis=2)
-    #     self.terminated = False
-
     def __eq__(self, other: WorldState) -> bool:
         if self.crashed != other.crashed:
             return False
