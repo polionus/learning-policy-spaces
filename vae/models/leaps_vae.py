@@ -1,20 +1,15 @@
 import jax
 import jax.numpy as jnp
 
+
 import equinox as eqx
 from utils.rng import make_key_gen
 from utils.losses import Batch
-
 from dsl import DSL
-from typing import Tuple
 
 from ..utils import init_gru, init_gru_cell, init_linear, GRU
 from .base_vae import BaseVAE, ModelOutput
-from karel.world import WorldState
 from config import TrainConfig
-
-
-
 ###NOTE: Something confusing is that the logic that executes the policy is different from the logic that is used in training?
 ### So there is the policy executor method in leaps vae, there is also the execute policy method used during training
 
@@ -101,11 +96,11 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 mlp_input = jnp.concatenate([gru_hidden_state, token_embedding, z])
                 
                 pred_token_logits = self.decoder_mlp(mlp_input)
-                # syntax_mask, grammar_state = self.get_syntax_mask(current_tokens, grammar_state)
-                # pred_token_logits += syntax_mask
+                syntax_mask, grammar_state = self.get_syntax_mask(current_tokens, grammar_state)
+                pred_token_logits += syntax_mask
             
                 ### Why take soft max and then immediately argmax?
-                pred_tokens = jnp.argmax(self.softmax(pred_token_logits), axis = -1)
+                pred_tokens = jnp.argmax(pred_token_logits, axis = -1)
             
                 if progs_teacher_enforcing:
                     current_token = progs[iter].astype(jnp.int32)
@@ -137,46 +132,60 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                             s_h: jax.Array, 
                             a_h: jax.Array):          
             _, c, h, w = s_h.shape
-            current_state = s_h[0, :, :, :]
-            current_action = (self.num_agent_actions - 1) 
-        
+            a_h = a_h.astype(jnp.int32)
+            current_state = s_h[0]
+            current_action = self.num_agent_actions - 1
+
+            if a_h_teacher_enforcing:
+                enc_states = jax.vmap(self.state_encoder)(s_h)
+                enc_actions = jax.vmap(self.action_encoder)(a_h)
+
+                current_enc_state = enc_states[0]
+                current_enc_action = enc_actions[0]   
+            else:
+                world = self.env_init(current_state)
+                current_enc_state = self.state_encoder(current_state)
+                current_enc_action = self.action_encoder(current_action)
+
             gru_hidden = z
             world = -1
-
-            ### This should work with vmap
-            if not a_h_teacher_enforcing:
-                world = self.env_init(current_state)
-
             terminated_policy = jnp.zeros_like(current_action, dtype = jnp.bool)
             mask_valid_actions = jnp.array((self.num_agent_actions - 1) * [-jnp.finfo(dtype = jnp.float32).max] + [0.0])
 
-            init_state = current_state, current_action, gru_hidden, terminated_policy, world
+            state_action = current_state, current_action, current_enc_state, current_enc_action
+            init_state = state_action, gru_hidden, terminated_policy, world
 
+            ### Encode all states and actions before the loop, in one vmapped operation, instead of sequentially:
             def policy_executor_step(state, iter: int):
                 
-                current_state, current_action, gru_hidden, terminated_policy, world = state
-                enc_state = self.state_encoder(current_state)
-                enc_action = self.action_encoder(current_action)
-                gru_inputs = jnp.concatenate([z, enc_state, enc_action])
+                state_action, gru_hidden, terminated_policy, world = state
+                current_state, current_action, current_enc_state, current_enc_action = state_action
+
+                gru_inputs = jnp.concatenate([z, current_enc_state, current_enc_action])
                 gru_hidden = self.policy_gru(gru_inputs, gru_hidden) ### This is so slow!!!!!!
                 pred_action_logits = self.policy_mlp(gru_hidden) ### this is also slow, but not as slow.
         
                 masked_action_logits = pred_action_logits + terminated_policy * mask_valid_actions
-                
-                
                 if a_h_teacher_enforcing:
                     ##This does not chagne the type of the input
-                    current_state = s_h[iter, :, :, :]
-                    current_action = a_h[iter].astype(jnp.int32)
-                
+                    current_state = s_h[iter]
+                    current_action = a_h[iter]
+
+                    current_enc_state = enc_states[iter]
+                    current_enc_action = enc_actions[iter]
                 else:
-                   
                     current_action = jnp.argmax(masked_action_logits)
+                    current_enc_action = self.action_encoder(current_action)
+
                     current_state, world = self.env_step(world, current_action) ### The difference this makes is minimal.
-                    
+                    current_enc_state = self.state_encoder(current_state)
+
                 terminated_policy = jnp.logical_or(current_action == self.num_agent_actions - 1, terminated_policy)
 
-                new_state = (current_state, current_action, gru_hidden, terminated_policy, world)
+                
+                state_action = current_state, current_action, current_enc_state, current_enc_action
+
+                new_state = (state_action, gru_hidden, terminated_policy, world)
                 y = (current_action,pred_action_logits)
         
                 return new_state, y
@@ -190,14 +199,8 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
         def __call__(self, batch:Batch):
             
-            
             z, mu, sigma = self.encode(batch.progs, batch.progs_masks) ## This part is fine.
 
-            ### The methods have been constructed at initialization time, and hence do not need the flags passed in 
-            # ### for each call.
-
-            
-            ### I might have to change this to a pytree with eqx.Module
             decoder_result = self.decode(z, batch.progs) ### This makes it slower, but not as slow. 
             pred_progs, pred_progs_logits, pred_progs_masks = decoder_result
 
