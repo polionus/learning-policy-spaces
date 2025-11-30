@@ -70,20 +70,20 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 ]
             )
         
+        @eqx.filter_vmap(in_axes=(None, 0, 0))
         def encode(self, progs: jax.Array, progs_mask: jax.Array):
 
             """Encode a batch of programs and program masks. """
-
+        
             enc_prog = self.vectorized_token_encoder(progs)
             enc_hidden_state = self.encoder_gru((enc_prog, progs_mask), jnp.zeros(self.hidden_size))
             z, mu, sigma = self.sample_latent_vector(enc_hidden_state)
             
             return z, mu, sigma            
 
+        @eqx.filter_vmap(in_axes=(None, 0, 0))
         def decode(self, z: jax.Array, progs: jax.Array):
 
-            
-            
             # batch_size, _ = z.shape
             gru_hidden_state = z
             current_token = jnp.array(0, dtype = jnp.int32)
@@ -101,8 +101,8 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
                 mlp_input = jnp.concatenate([gru_hidden_state, token_embedding, z])
                 
                 pred_token_logits = self.decoder_mlp(mlp_input)
-                syntax_mask, grammar_state = self.get_syntax_mask(current_tokens, grammar_state)
-                pred_token_logits += syntax_mask
+                # syntax_mask, grammar_state = self.get_syntax_mask(current_tokens, grammar_state)
+                # pred_token_logits += syntax_mask
             
                 ### Why take soft max and then immediately argmax?
                 pred_tokens = jnp.argmax(self.softmax(pred_token_logits), axis = -1)
@@ -128,12 +128,14 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
             return pred_progs, pred_progs_logits, pred_progs_masks
 
+
+        # There are two compositions of the vmap since the a_h and s_h inputs have 2 batch dimensions (batch_dim, num_demos_pre_prog)
+        @eqx.filter_vmap(in_axes=(None, None, 1, 1))
+        @eqx.filter_vmap(in_axes=(None, 0, 0, 0))
         def policy_executor(self, 
                             z: jax.Array, 
                             s_h: jax.Array, 
-                            a_h: jax.Array,
-                            a_h_mask: jax.Array,
-                            ):          
+                            a_h: jax.Array):          
             _, c, h, w = s_h.shape
             current_state = s_h[0, :, :, :]
             current_action = (self.num_agent_actions - 1) 
@@ -181,7 +183,6 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
             
             final_state, ys = jax.lax.scan(policy_executor_step, init_state, jnp.arange(1, self.max_demo_length))
             pred_a_h, pred_a_h_logits = ys  
-
             pred_a_h_masks = pred_a_h != self.num_agent_actions - 1
 
             return pred_a_h, pred_a_h_logits, pred_a_h_masks, world
@@ -189,19 +190,23 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
 
         def __call__(self, batch:Batch):
             
+            
             z, mu, sigma = self.encode(batch.progs, batch.progs_masks) ## This part is fine.
 
             ### The methods have been constructed at initialization time, and hence do not need the flags passed in 
             # ### for each call.
 
-
+            
             ### I might have to change this to a pytree with eqx.Module
             decoder_result = self.decode(z, batch.progs) ### This makes it slower, but not as slow. 
             pred_progs, pred_progs_logits, pred_progs_masks = decoder_result
+
+            
             # ### The methods have been constructed at initialization time, and hence do not need the flags passed in 
             # ### for each call. These functions need their signatures fixed so that they work properly (I have removed the teacher_enforcing flags.)
-            policy_result = self.policy_executor(z, batch.s_h, batch.a_h, batch.a_h_masks) ### BUG: This is the slowest part.
+            policy_result = self.policy_executor(z, batch.s_h, batch.a_h) ### BUG: This is the slowest part.
             pred_a_h, pred_a_h_logits, pred_a_h_masks, world = policy_result ## Is the world state going to be necessary (I think not?)
+         
         
             return ModelOutput(mu,
                             sigma,
@@ -241,13 +246,5 @@ def make_leaps_vae(progs_teacher_enforcing: bool, a_h_teacher_enforcing: bool):
             return pred_progs_tokens
     return LeapsVAE
 
-LeapsVAE = make_leaps_vae(TrainConfig.prog_teacher_enforcing, not TrainConfig.a_h_teacher_enforcing)
+LeapsVAE = make_leaps_vae(TrainConfig.prog_teacher_enforcing, TrainConfig.a_h_teacher_enforcing)
 LeapsVAESearch = make_leaps_vae(False, False)
-
-
-
-
-
-
-
-
