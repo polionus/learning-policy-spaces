@@ -7,3 +7,4 @@
 *.gif
 *.log
 _workbench.py
+uv.lock
