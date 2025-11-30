@@ -1,14 +1,14 @@
 import jax
 import jax.numpy as jnp
-import numpy as np
 import equinox as eqx
 import optax
 from typing import Tuple
-from utils.losses import get_loss_fn, Batch
+from utils.losses import get_loss_fn
 from functools import partial
 from aim import Run
 from logger.logger import logger
 from utils.time import get_time_stamp
+
 
 from torch.utils.data import DataLoader
 from config import TrainConfig
@@ -16,40 +16,24 @@ from typing import NamedTuple
 
 from .models.base_vae import BaseVAE
 
+# NOTE: Interestingly, I don't get any recompilation when this is jitted. So the speed problems are not from recompilation.
+# NOTE: The recompilations also isn't from the array manipulation in the loss function, but from the network forward pass, since when I remove the forward passes of the policy executor and the decoder, 
+# training is fast. (ALthough, it might also be because of the backward pass for those components that is jitted away?)
 
-inner_axes = Batch(
-    s_h=0, 
-    a_h=0, 
-    a_h_masks=0, 
-    progs=None,      # <--- Broadcast: Use the same prog for all 10 steps
-    progs_masks=None # <--- Broadcast
-)
-
-# OUTER AXES: Handling the '256' dimension
-# We map axis 0 of everything. This peels off the '256' layer, 
-# passing a [10, ...] chunk to the inner function.
-outer_axes = Batch(
-    s_h=0, 
-    a_h=0, 
-    a_h_masks=0, 
-    progs=0,         # <--- Vectorize: Pick the specific prog for this batch item
-    progs_masks=0    # <--- Vectorize
-)
-
-@eqx.filter_jit
-@eqx.filter_vmap(in_axes=((None, None, None, None, outer_axes)))
-@eqx.filter_vmap(in_axes=(None, None, None, None, inner_axes))
+# NOTE: The next(keygen) stuff is a problem. 
+# NOTE: the dummy losses seem faster?
+@partial(jax.jit, static_argnames = ('loss_fn', 'optimizer'))
 def train_step(params, 
                opt_state, 
                optimizer: optax.GradientTransformation, 
                loss_fn:callable, 
-               batch: jax.Array) -> Tuple[eqx.Module, Tuple, jax.Array, NamedTuple]:
+               batch: jax.Array,
+               ) -> Tuple[eqx.Module, Tuple, jax.Array, NamedTuple]:
         
-
+        
         (loss, aux), grads = eqx.filter_value_and_grad(loss_fn, has_aux=True)(params, batch)
         updates, opt_state = optimizer.update(grads, opt_state, params = params)
         params = eqx.apply_updates(params, updates)
-
         return params, opt_state, loss, aux
 
 def init_training(init_params, lr: float):
@@ -79,17 +63,13 @@ class Trainer:
 
         ###TODO: Find a cleaner way of doing this: this seems to be biting us in the ass.
         self.init_params, self.static = eqx.partition(model, eqx.is_inexact_array)
+        self.model = model
         self.run = run
         self.save = save
         ##Check if necessary?
-        # self.output_dir = os.path.join("index", Config.experiment_name)
- 
         
         self.loss_fn = partial(get_loss_fn(TrainConfig.model_name), static = self.static)
-        # self.save_each_epoch = Config.trainer_save_params_each_epoch
         self.num_epochs = TrainConfig.num_epochs
-        
-        # os.makedirs(os.path.join(self.output_dir, "model"), exist_ok=True)
 
     ### TODO: MAke sure to also get this based on model name.
     def caluculate_run_statistics(self, 
@@ -125,15 +105,13 @@ class Trainer:
 
 
     def _run_batch(self, params, batch: list, opt_state, optimizer, training=True) -> Tuple:
-        
         # The model takes in these parameters, and outputs: Teacher enforcing is enabled by default, and so was also enabled for us.
         params, opt_state, total_loss, aux =  train_step(params, opt_state, optimizer, self.loss_fn, batch)
         logger.info(f'Batch done, loss: {total_loss}')
-        
-        self.run.track(float(total_loss), name = "Loss")
-        self.run.track(float(aux.latent_loss), name = "Latent loss")
-        self.run.track(float(aux.progs_loss), name = "Progs Loss")
-        self.run.track(float(aux.a_h_loss), name = "A_H Loss")
+        # self.run.track(float(total_loss), name = "Loss")
+        # self.run.track(float(aux.latent_loss), name = "Latent loss")
+        # self.run.track(float(aux.progs_loss), name = "Progs Loss")
+        # self.run.track(float(aux.a_h_loss), name = "A_H Loss")
         
         metrics = 0
         return params, metrics
@@ -145,7 +123,6 @@ class Trainer:
 
         for batch_idx, batch in enumerate(dataloader):
             params, batch_info = self._run_batch(params, batch, opt_state, optimizer, training)
-
         epoch_info_list = jnp.mean(batch_info_list, axis=0)
 
         return params, EpochReturn(*epoch_info_list.tolist())
